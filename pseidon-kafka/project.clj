@@ -1,4 +1,4 @@
-(defproject pseidon-kafka "1.0.1-SNAPSHOT"
+(defproject pseidon-kafka "1.0.2-SNAPSHOT"
   :description "FIXME: write description"
   :url "Pseidon kafka plugin"
   :license {:name "Eclipse Public License"

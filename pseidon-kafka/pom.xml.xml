@@ -5,7 +5,7 @@
 	<groupId>pseidon-kafka</groupId>
 	<artifactId>pseidon-kafka</artifactId>
 	<packaging>jar</packaging>
-	<version>1.0.1-SNAPSHOT</version>
+	<version>1.0.2-SNAPSHOT</version>
 	<name>pseidon-kafka</name>
 	<description>Pseidon kafka plugin</description>
 	<url>https://github.com/gerritjvv/pseidon</url>
@@ -33,7 +33,7 @@
 					<copyright>http://www.apache.org/licenses/LICENSE-2.0</copyright>
 					<distribution>pseidon-kafka</distribution>
 					<group>utilties</group>
-					<release>2</release>
+					<release>1</release>
 					<packager>https://github.com/gerritjvv/pseidon/tree/master/pseidon-kafka</packager>
 					<provides>
 						<provide>pseidon-kafka</provide>
