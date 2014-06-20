@@ -1,35 +1,32 @@
 (ns pseidon.kafka.consumer
     (:require
-              [clojure.tools.logging :refer [info error]]
-              [kafka-clj.consumer  :refer [consumer read-msg close-consumer] :as kfk]
+              [clojure.tools.logging :refer [info error ]]
+              [kafka-clj.consumer.node :as kfk]
               [kafka-clj.metrics :refer [ report-consumer-metrics ]]
               [clojure.tools.logging :refer [info]])
     )
 
-(defn lazy-ch [c ]
-    (lazy-seq (cons (read-msg c) (lazy-ch c))))
+(defn add-topic [node topic]
+  (kfk/add-topics! node [topic]))
 
-(defn close-consumer2 [c]
-  (close-consumer c))
-
-(defn add-topic [consumer topic]
-  (kfk/add-topic consumer topic))
-
-(defn remove-topic [consumer topic]
-  (kfk/remove-topic consumer topic))
+(defn remove-topic [node topic]
+  (kfk/remove-topics! node [topic]))
 
 (defn create-consumer [bootstrap-brokers topics conf]
   (info "!!!!!!!!!!!!!!!!!!!!!! Bootstrap-brokers " bootstrap-brokers " topics " topics)
-  (report-consumer-metrics :csv :freq 10 :dir (get conf :kafka-reporting-dir "/tmp/kafka-consumer-metrics"))
+  ;(report-consumer-metrics :csv :freq 10 :dir (get conf :kafka-reporting-dir "/tmp/kafka-consumer-metrics"))
+  (info "config " conf)
 
-  (consumer
-              bootstrap-brokers
-              topics (merge conf
-                        {:use-earliest true :metadata-timeout 60000
+  (kfk/create-node! (merge conf
+                       {:bootstrap-brokers bootstrap-brokers
+                        :use-earliest true :metadata-timeout 60000
+                        :consume-step (get conf :consume-step 10000)
+                        :conf conf
+                        }) topics))
 
-                        :redis-conf (get conf :redis-conf {:redis-host "localhost"}) })))
+(defn close-consumer [c]
+  (kfk/shutdown-node! c))
 
 (defn messages [c ]
   "Returns a lazy sequence that will block when data is not available"
-
-    (lazy-ch c))
+    (kfk/msg-seq! c))

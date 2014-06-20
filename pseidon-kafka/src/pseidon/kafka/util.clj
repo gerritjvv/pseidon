@@ -1,6 +1,6 @@
 (ns pseidon.kafka.util
   (:require [pseidon.core.conf :refer [get-sub-conf]]
-            [pseidon.kafka.consumer :refer [messages create-consumer close-consumer2 add-topic remove-topic]]
+            [pseidon.kafka.consumer :refer [messages create-consumer close-consumer add-topic remove-topic]]
             [pseidon.kafka.producer :refer [producer send-messages send-message close-producer]]
             [pseidon.core.registry :refer [create-datasource create-datasink register]]
             [clojure.tools.logging :refer [info error]]
@@ -36,13 +36,13 @@
         (run [] 
               )
         (stop []
-              (close-consumer2 @c))
+              (close-consumer @c))
         (list-files  [] )
         (reader-seq  [ & topics]
           
           (if (nil? @c)
             (dosync (alter c (fn [_] 
-                               (delay (create-consumer bootstrap-brokers (if (empty? topics) #{"test"} (set topics)) conf)))))
+                               (delay (create-consumer bootstrap-brokers (set topics) conf)))))
             (doseq [topic topics]
               (add-topic @@c topic)))
           
