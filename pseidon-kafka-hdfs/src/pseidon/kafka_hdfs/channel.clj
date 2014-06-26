@@ -82,7 +82,7 @@
   "load topics from the kafka-logs table"
   [host & {:keys [db] :or {db (force DEFAULT_DB)}}]
   (sql/with-connection db
-    (sql/with-query-results rs [(str "select log from kafka_logs where type='hdfs' and host='" host "' and enabled=1")] (vec (map :log rs)))))
+    (sql/with-query-results rs [(str "select log from kafka_logs where type='hdfs' and `group`='" (get (get-conf2 :kafka.redis-conf {}) :group-name "hdfs") "' and enabled=1")] (vec (map :log rs)))))
 
 (defn- get-default-value 
   "Based on the source log data type a default type is returned, string \"\" boolean false and everything else -1"

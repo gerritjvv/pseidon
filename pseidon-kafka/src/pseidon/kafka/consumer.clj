@@ -29,4 +29,4 @@
 
 (defn messages [c ]
   "Returns a lazy sequence that will block when data is not available"
-    (repeatedly #(kfk/read-msg-batch! c)))
+    (kfk/msg-seq-buffered! c :step 1000))

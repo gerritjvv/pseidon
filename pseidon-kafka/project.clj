@@ -1,4 +1,4 @@
-(defproject pseidon-kafka "1.0.2-SNAPSHOT"
+(defproject pseidon-kafka "1.0.5-SNAPSHOT"
   :description "FIXME: write description"
   :url "Pseidon kafka plugin"
   :license {:name "Eclipse Public License"
@@ -6,7 +6,7 @@
 
   :dependencies [
                  [org.clojure/core.async "LATEST"]
-                 [kafka-clj "2.0.2"]
+                 [kafka-clj "2.0.5"]
                  [midje "1.6-alpha2" :scope "test"]
                  [pseidon "0.4.4-SNAPSHOT" :scope "provided"]
                  [com.taoensso/nippy "2.5.2"]
