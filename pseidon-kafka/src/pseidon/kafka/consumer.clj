@@ -2,6 +2,7 @@
     (:require
               [clojure.tools.logging :refer [info error ]]
               [kafka-clj.consumer.node :as kfk]
+              [kafka-events-disk.core :as ed]
               [kafka-clj.metrics :refer [ report-consumer-metrics ]]
               [clojure.tools.logging :refer [info]])
     )
@@ -17,14 +18,18 @@
   ;(report-consumer-metrics :csv :freq 10 :dir (get conf :kafka-reporting-dir "/tmp/kafka-consumer-metrics"))
   (info "config " conf)
 
-  (kfk/create-node! (merge conf
-                       {:bootstrap-brokers bootstrap-brokers
-                        :use-earliest true :metadata-timeout 60000
-                        :consume-step (get conf :consume-step 10000)
-                        :conf conf
-                        }) topics))
+  (let [node
+        (kfk/create-node! (merge conf
+                                 {:bootstrap-brokers bootstrap-brokers
+                                  :use-earliest true :metadata-timeout 60000
+                                  :consume-step (get conf :consume-step 10000)
+                                  :conf conf
+                                  }) topics)]
+    (ed/register-writer! node {:path (get conf :kafka-events-path "/tmp/kafka-workunits")})
+    node))
 
 (defn close-consumer [c]
+  (ed/close-writer! c)
   (kfk/shutdown-node! c))
 
 (defn messages [c ]

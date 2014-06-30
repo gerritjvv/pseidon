@@ -200,7 +200,7 @@
   (let [flatten-msgs (map-flatten packed-msg)]
     
     (doseq [[k msgs] (partition-msgs flatten-msgs)]
-      (write ape-conn k (fn [out] 
+      (write ape-conn k (fn [{:keys [^DataOutputStream out]}]
                           (doseq [[topic k bts] msgs]
                             ;we do not use a encoder here and just write out the original message
                             ;using encoders are too in efficient
