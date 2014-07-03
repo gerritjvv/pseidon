@@ -155,7 +155,7 @@
 
 (defn ^:dynamic load-processor []
   (let [ ;globals
-        local-file-model (get-conf2 "hdfs-local-file-model" 1) ;what local-file-model to apply
+        local-file-model (get-conf2 "hdfs-local-file-model" 2) ;what local-file-model to apply
         hdfs-dir-model (get-conf2 "hdfs-dir-model" 1) ;what hdfs directory model to apply
         hdfs-dir (get-conf2 "hdfs-base-dir" "/log/raw") ;get the base hdfs dir 
         ] 
@@ -191,24 +191,26 @@
                 )
 	    (stop [] (.close (get-fs))
 	          )
-	    (exec [ {:keys [topic ts ds] :as msg } ] ;unpack message
+	    (exec [ {:keys [topic ts ds ids] :as msg } ] ;unpack message
                   (info "hdfs exec -> message " topic " ids " (get-ids msg))
-	          (let [
-	                ids (get-ids msg)  ;get the message ids as a sequence
-	                ]
-	               (doseq [id ids
-	                       ] ;for each id (the id should be the local file-name) upload the file
-	                 (let [
-	                       ^String local-file id
-	                       ^String file-name (-> local-file java.io.File. .getName)
-	                       [type-name _ _ date-hr] (apply-model local-file-model file-name-parsers file-name); inserts the correct model function
-	                       date-dir (apply-model hdfs-dir-model hdfs-dir-formatters date-hr)
-	                       remote-file (str hdfs-dir "/" type-name "/" date-dir "/" host-name "-" file-name) ;construct the remote file-name
-	                       ]
-                           (info "reading id " id)
-	                   (go 
-	                     (>! c [ds id local-file remote-file]) ;here id is the local file
-	                     )))))
+	          (try
+              (let [
+                     ids (get-ids msg)  ;get the message ids as a sequence
+                     ]
+                   (doseq [id ids
+                           ] ;for each id (the id should be the local file-name) upload the file
+                          (let [
+                                 ^String local-file id
+                                 ^String file-name (-> local-file java.io.File. .getName)
+                                 [type-name _ _ date-hr] (apply-model local-file-model file-name-parsers file-name); inserts the correct model function
+                                 date-dir (apply-model hdfs-dir-model hdfs-dir-formatters date-hr)
+                                 remote-file (str hdfs-dir "/" type-name "/" date-dir "/" host-name "-" file-name) ;construct the remote file-name
+                                 ]
+                               (info "reading id " id)
+                               (go
+                                 (>! c [ds id local-file remote-file]) ;here id is the local file
+                                 ))))
+              (catch Exception e (error e e))))
 	   
 	    
 	    ]
