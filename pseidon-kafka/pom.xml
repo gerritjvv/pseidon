@@ -176,6 +176,30 @@
       <version>2.11</version>
       <scope>provided</scope>
     </dependency>
+    <dependency>
+      <groupId>org.clojure</groupId>
+      <artifactId>tools.nrepl</artifactId>
+      <version>0.2.3</version>
+      <exclusions>
+        <exclusion>
+          <groupId>org.clojure</groupId>
+          <artifactId>clojure</artifactId>
+        </exclusion>
+      </exclusions>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>clojure-complete</groupId>
+      <artifactId>clojure-complete</artifactId>
+      <version>0.2.3</version>
+      <exclusions>
+        <exclusion>
+          <groupId>org.clojure</groupId>
+          <artifactId>clojure</artifactId>
+        </exclusion>
+      </exclusions>
+      <scope>test</scope>
+    </dependency>
   </dependencies>
 </project>
 
