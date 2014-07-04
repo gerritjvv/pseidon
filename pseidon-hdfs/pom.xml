@@ -3,7 +3,7 @@
   <groupId>pseidon-hdfs</groupId>
   <artifactId>pseidon-hdfs</artifactId>
   <packaging>jar</packaging>
-  <version>0.1.0-SNAPSHOT</version>
+  <version>2.0.0-SNAPSHOT</version>
   <name>pseidon-hdfs</name>
   <description>A pseidon data source, channel and processor for writing to hdfs</description>
   <url>github.com/gerritjvv/pseidon</url>
@@ -26,72 +26,15 @@
         <directory>dev-resources</directory>
       </testResource>
       <testResource>
+        <directory>dev-resources</directory>
+      </testResource>
+      <testResource>
         <directory>resources</directory>
       </testResource>
     </testResources>
     <directory>target</directory>
     <outputDirectory>target/classes</outputDirectory>
-    <plugins>
-<plugin>
-					<groupId>org.codehaus.mojo</groupId>
-					<artifactId>rpm-maven-plugin</artifactId>
-					<version>2.0.1</version>
-					<extensions>true</extensions>
-
-
-					<configuration>
-						<copyright>http://www.apache.org/licenses/LICENSE-2.0</copyright>
-						<distribution>pseidon-hdfs</distribution>
-						<group>utilties</group>
-						<release>3</release>
-						<packager>http://code.google.com/p/</packager>
-						<provides>
-							<provide>pseidon-hdfs</provide>
-						</provides>
-						<defineStatements>
-							<defineStatement>_unpackaged_files_terminate_build 0
-							</defineStatement>
-						</defineStatements>
-						<mappings>
-							<mapping>
-								<directory>/opt/pseidon-hdfs/plugins</directory>
-								<configuration>true</configuration>
-								<filemode>776</filemode>
-								<username>pseidon</username>
-								<groupname>pseidon</groupname>
-								<sources>
-									<source>
-										<location>src</location>
-									</source>
-								</sources>
-							</mapping>
-
-							<mapping>
-								<directory>/opt/pseidon-hdfs/log</directory>
-								<filemode>775</filemode>
-								<username>pseidon</username>
-								<groupname>pseidon</groupname>
-							</mapping>
-
-						</mappings>
-						  <preinstallScriptlet>
-                        	<script>
-#!/usr/bin/env bash
-#Creates the pseidon user and group
-#see http://fedoraproject.org/wiki/Packaging%3aUsersAndGroups
-#safety for when the commands to not exist
-type getent || exit 0
-
-getent group pseidon >/dev/null || groupadd -r pseidon
-       getent passwd pseidon >/dev/null || \
-       useradd -r -g pseidon -d /home/pseidon -s /sbin/nologin \
-       -c "pseidon runs under the pseidon user and group" pseidon
-exit 
-							</script>
-                    	</preinstallScriptlet>
-					</configuration>
-				</plugin>
-    </plugins>
+    <plugins/>
   </build>
   <repositories>
     <repository>
@@ -134,12 +77,32 @@ exit
         <enabled>true</enabled>
       </releases>
     </repository>
+    <repository>
+      <id>streams-repo</id>
+      <url>https://bigstreams.googlecode.com/svn/mvnrepo/releases</url>
+      <snapshots>
+        <enabled>true</enabled>
+      </snapshots>
+      <releases>
+        <enabled>true</enabled>
+      </releases>
+    </repository>
+    <repository>
+      <id>spring snapshot</id>
+      <url>http://repo.springsource.org/libs-snapshot</url>
+      <snapshots>
+        <enabled>true</enabled>
+      </snapshots>
+      <releases>
+        <enabled>true</enabled>
+      </releases>
+    </repository>
   </repositories>
-<dependencies>
+  <dependencies>
     <dependency>
       <groupId>org.clojure</groupId>
       <artifactId>clojure</artifactId>
-      <version>1.5.1</version>
+      <version>1.6.0</version>
       <scope>provided</scope>
     </dependency>
     <dependency>
@@ -157,7 +120,7 @@ exit
     <dependency>
       <groupId>pseidon</groupId>
       <artifactId>pseidon</artifactId>
-      <version>0.3.1-SNAPSHOT</version>
+      <version>2.0.0-SNAPSHOT</version>
       <scope>provided</scope>
     </dependency>
     <dependency>
@@ -169,38 +132,18 @@ exit
     <dependency>
       <groupId>org.clojure</groupId>
       <artifactId>core.async</artifactId>
-      <version>0.1.0-SNAPSHOT</version>
-      <scope>provided</scope>
+      <version>0.1.267.0-0d7780-alpha</version>
     </dependency>
     <dependency>
       <groupId>midje</groupId>
       <artifactId>midje</artifactId>
-      <version>1.6-alpha2</version>
+      <version>1.6.0</version>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.clojure</groupId>
-      <artifactId>tools.nrepl</artifactId>
+      <artifactId>data.json</artifactId>
       <version>0.2.3</version>
-      <exclusions>
-        <exclusion>
-          <groupId>org.clojure</groupId>
-          <artifactId>clojure</artifactId>
-        </exclusion>
-      </exclusions>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>clojure-complete</groupId>
-      <artifactId>clojure-complete</artifactId>
-      <version>0.2.3</version>
-      <exclusions>
-        <exclusion>
-          <groupId>org.clojure</groupId>
-          <artifactId>clojure</artifactId>
-        </exclusion>
-      </exclusions>
-      <scope>test</scope>
     </dependency>
   </dependencies>
 </project>

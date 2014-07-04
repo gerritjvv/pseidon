@@ -1,5 +1,5 @@
 (ns pseidon.hdfs.core.hdfsprocessor
-  
+"Loads files into hdfs"  
   (:require [pseidon.core.tracking :refer [mark-done!]]
             [pseidon.core.conf :refer [get-conf2]]
             [clj-time.coerce :refer [from-long]]

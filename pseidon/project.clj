@@ -1,12 +1,12 @@
-(defproject pseidon "0.5.1-SNAPSHOT"
+(defproject pseidon "2.0.0-SNAPSHOT"
   :description "BigData Import Framework"
   :url "https://github.com/gerritjvv/pseidon"
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
   :dependencies [
-                 [org.clojure/clojure "1.6.0"]
-                 [thread-exec "0.2.0-SNAPSHOT"]
-                 [com.taoensso/nippy "2.4.1"] 
+                 [org.clojure/clojure "_"]
+                 [thread-exec "_"]
+                 [com.taoensso/nippy "_"] 
                  [net.openhft/chronicle "2.1-SNAPSHOT"]
                  [goat "0.1.0-SNAPSHOT"]
                  [commons-net "3.2"]
@@ -16,9 +16,9 @@
                  [org.apache.sshd/sshd-core "0.8.0"]  
                  [com.jcraft/jsch "0.1.50"]
                  [org.clojure/tools.namespace "0.2.4"]
-                 [clj-time "0.5.1"]
+                 [clj-time "_"]
                  [http-kit "2.1.8"]
-                 [fun-utils "LATEST"]
+                 [fun-utils "_"]
                  [compojure "1.1.5"]
                  [cheshire "5.2.0"]
                  [org.clojure/core.async "0.1.0-SNAPSHOT"]
@@ -33,7 +33,7 @@
                                               com.sun.jdmk/jmxtools
                                               com.sun.jmx/jmxri]]
                  [clj-logging-config "1.9.10"]
-                 [org.clojure/tools.logging "0.2.3"]
+                 [org.clojure/tools.logging "_"]
                  [org.clojure/tools.nrepl "0.2.3"]
                  [org.apache.curator/curator-framework "2.2.0-incubating"]
                  [org.apache.curator/curator-test "2.2.0-incubating" :scope "test"]
@@ -70,6 +70,7 @@
   :jvm-opts ["-Xmx1g"]
   
   :plugins [
+	 [lein-modules "0.3.6"]
          [lein-rpm "0.0.5"] [lein-midje "3.0.1"] [lein-marginalia "0.7.1"] 
          [lein-kibit "0.0.8"] [no-man-is-an-island/lein-eclipse "2.0.0"]
            ]
