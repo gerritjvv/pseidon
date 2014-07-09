@@ -30,8 +30,13 @@
 
 (def exec-meter (add-meter (str "pseidon.kafka_hdfs.processor" )))
 
+(defonce kafka-writer  (delay (let [{:keys [writer]} (reg-get-wait "pseidon.kafka.util.datasink" 10000)] writer)))
+
 (defonce data-meter-map (ref {}))
 (defonce msg-meter-map (ref {}))
+
+
+(defonce host-name (-> (java.net.InetAddress/getLocalHost) .getHostName))
 
 (def parser-object-pool 
   (let [
@@ -169,30 +174,46 @@
 (defn- map-flatten [packed-msg]
   "Flattens the packed msgs and maps to [topic key decoded-data]"
   (let [dateformat (formatter "yyyyMMddHH")]
-  (filter (complement nil?) 
-  (map 
-    (fn [{:keys [topic bts] :as msg}] 
-      (try
-        (let [bdata ((get-decoder topic) bts)
-              encoder (get-encoder topic)
-            ts ((get-ts-parser topic) bdata (get-ts-parser-args topic))
-            k (str topic "_" (unparse dateformat (if ts 
-                                                   (from-long ts)
-                                                   (from-long (System/currentTimeMillis)))))]
-          ;need to include the option of using an encoder here only if specified
-          ;use only the dynamically configured decoders
-             
-           (tuple topic k (get-bytes (encoder bts bdata))))
-        (catch Exception e (do 
-                             (error (str "Exception " e " looking at " (String. ^"[B" bts) " msg " msg))
-                             ())
-        )))
-    (flatten (:bytes-seq packed-msg))))))
+    (filter (complement nil?)
+      (map
+        (fn [{:keys [topic bts] :as msg}]
+          (try
+            (let [bdata ((get-decoder topic) bts)
+                  encoder (get-encoder topic)
+                ts ((get-ts-parser topic) bdata (get-ts-parser-args topic))
+                k (str topic "_" (unparse dateformat (if ts
+                                                       (from-long ts)
+                                                       (from-long (System/currentTimeMillis)))))]
+              ;need to include the option of using an encoder here only if specified
+              ;use only the dynamically configured decoders
+
+               (tuple topic k (get-bytes (encoder bts bdata))))
+            (catch Exception e (do
+                                 (error (str "Exception " e " looking at " (String. ^"[B" bts) " msg " msg))
+                                 nil)
+            )))
+        (flatten (:bytes-seq packed-msg))))))
   
 (defn- partition-msgs [msgs]
   "Excepts messages from packed-msg and each msg in msgs must be [topic key data], the messages are partitioned by key"
   (group-by second msgs))
 
+
+(defn- to-json-bts [m]
+       (.getBytes ^String (json/generate-string m) "UTF-8"))
+
+(defn- write-metrics-msg
+       "Write a metrics message to etl-metrics
+        Will not write etl-metrics messages to etl-metrics"
+       [topic msg-count]
+       (if (not= topic "etl-metrics")
+         (let [ts (System/currentTimeMillis)]
+              ((force kafka-writer) {:topic "etl-metrics" :bts (to-json-bts {:log_name topic
+                                                                       :n msg-count
+                                                                       :stage "hdfs"
+                                                                       :start_ts ts
+                                                                       :ts ts
+                                                                       :host host-name})}))))
 
 ;read messages from the logpuller and send to hdfs
 (defn exec [ packed-msg ]
@@ -200,13 +221,16 @@
   (let [flatten-msgs (map-flatten packed-msg)]
     
     (doseq [[k msgs] (partition-msgs flatten-msgs)]
+
       (write ape-conn k (fn [{:keys [^DataOutputStream out]}]
                           (doseq [[topic k bts] msgs]
                             ;we do not use a encoder here and just write out the original message
                             ;using encoders are too in efficient
                             (update-meter (get-msg-meter "total") 1)
                             (exec-write topic out bts))
-                            )))))
+                            ))
+      ;(-> msgs first first) gets the topic, all msg in msgs are of the same topic
+      (write-metrics-msg (-> msgs first first) (count msgs)))))
      	                      
 
 (defn ^:dynamic start []
