@@ -9,6 +9,8 @@
                  [com.taoensso/nippy "_"] 
                  [net.openhft/chronicle "2.1-SNAPSHOT"]
                  [goat "0.1.0-SNAPSHOT"]
+                 [robert/hooke "1.3.0"]
+                 [riemann-clojure-client "0.2.11"]
                  [commons-net "3.2"]
                  [commons-lang "2.6"]
                  [commons-io "2.4"]

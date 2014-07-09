@@ -1,15 +1,16 @@
-(ns pseidon.core.app)
-(use '[clojure.tools.logging])
+(ns pseidon.core.app
+    (:require [clojure.tools.logging :refer [error info]]
+              [pseidon.core.queue :as q]
+              [pseidon.core.registry :as r]
+              [pseidon.core.conf :as c]
+              [pseidon.core.datastore :as ds]
+              [pseidon.core.tracking :as tracking]
+              [pseidon.core.watchdog :as e]
+              [pseidon.view.server :as view]
+              [pseidon.core.message :as msg]
+              [pseidon.core.error-reporting :as error-reporting]))
+
 (use '[clojure.tools.namespace.repl :only (refresh set-refresh-dirs)])
-(use '[pseidon.core.queue :as q])
-(use '[pseidon.core.registry :as r])
-(use '[pseidon.core.conf :as c])
-(use '[pseidon.core.datastore :as ds])
-(use '[pseidon.core.tracking :rename  {start tracking-start shutdown tracking-shutdown}])
-(use '[pseidon.core.watchdog :as e])
-(use '[pseidon.view.server :as view])
-(use '[pseidon.core.message :as msg])
-(set! *warn-on-reflection* true)
 
 
 ;will reload all of the plugins
@@ -30,20 +31,22 @@
 (defn stop-app []
    (info "Stopping")
        
-     (shutdown-threads)
+     (q/shutdown-threads)
 	  
 	   (r/stop-all)
 	    
      (shutdown-agents)
 	   (ds/shutdown)
-	   (tracking-shutdown)
+	   (tracking/shutdown)
 	   (await-for 1000)
+     (error-reporting/stop)
      (info "14<<<< Stopped App >>>>")
+
 )
 
 (defn start-app [& { :keys [start-plugins] :or {start-plugins true}}]
 
-  (tracking-start)
+  (tracking/tracking-start)
   (refresh-plugins)
   (Thread/sleep 1000)
   (if start-plugins
@@ -59,6 +62,7 @@
                                                                                      
                                                                                      
   (view/start)
+  (error-reporting/start)
   (info "View started")
   )
 

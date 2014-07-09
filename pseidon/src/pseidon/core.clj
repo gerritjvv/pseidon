@@ -8,11 +8,11 @@
   (:import [org.apache.commons.exec CommandLine DefaultExecuteResultHandler DefaultExecutor ExecuteWatchdog ProcessDestroyer ShutdownHookProcessDestroyer])
   (:require [reply.main :refer [launch-nrepl]]
             [clojure.tools.logging :refer [info error]]
+            [clojure.tools.nrepl :as repl]
+            [robert.hooke :as hooke]
             [pseidon.core.watchdog :refer [watch-critical-error]])
 
   )
-
-(require '[clojure.tools.nrepl :as repl])
 
 (declare send-shutdown)
 
@@ -25,7 +25,7 @@
         ^DefaultExecuteResultHandler handler (DefaultExecuteResultHandler.)
         ^DefaultExecutor exec (doto (DefaultExecutor.) (.setExitValue 1) (.setWatchdog watchdog) (.setProcessDestroyer destroyer)
                                                        (.setWorkingDirectory (clojure.java.io/file "/opt/pseidon")))]
-    (prn "Starting managed pseidon process " "/opt/pseidon/bin/pseidon-process.sh")
+    (info "Starting managed pseidon process " "/opt/pseidon/bin/pseidon-process.sh")
     (.execute exec cmd handler)
     (prn "see /opt/pseidon/log/serverlog.log")
     [handler exec]))
@@ -42,7 +42,7 @@
     (if (not (is-shutdown?))
       (if (restart-process? handler)
         (do
-          (println "Managed process died. Restarting in 10 seconds.")
+          (error "Managed process died. Restarting in 10 seconds.")
           (Thread/sleep 10000)
           (recur (run-process)))
         (do
@@ -50,7 +50,7 @@
           (recur [handler exec])))
       (do
         (println "Exiting process")
-        (try (do (prn "send shutdown" (send-shutdown (get-conf2 :repl-port 7111)) "sent shutdown")) (catch Exception e (.printStackTrace e)))
+        (try (do (error "send shutdown" (send-shutdown (get-conf2 :repl-port 7111)) "sent shutdown")) (catch Exception e (.printStackTrace e)))
         (.destroyProcess (.getWatchdog exec))
         (println "Destroyed managed process")
         (System/exit 0)
@@ -115,7 +115,6 @@
 
 (defn shutdown []
   (info "!!!!!!!!!>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> clean shutdown")
-  (prn "!!!!!!!!!>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> clean shutdown")
   (try
     (stop-app)
     (catch Exception e (do (prn e))))
