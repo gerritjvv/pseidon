@@ -27,7 +27,6 @@
               [net.minidev.json JSONValue])
   )
 
-
 (def exec-meter (add-meter (str "pseidon.kafka_hdfs.processor" )))
 
 (defonce kafka-writer  (delay (let [{:keys [writer]} (reg-get-wait "pseidon.kafka.util.datasink" 10000)] writer)))
@@ -206,8 +205,10 @@
        "Write a metrics message to etl-metrics
         Will not write etl-metrics messages to etl-metrics"
        [topic msg-count]
+
        (if (not= topic "etl-metrics")
          (let [ts (System/currentTimeMillis)]
+              (inc-counter "hdfs-metric-count" msg-count)
               ((force kafka-writer) {:topic "etl-metrics" :bts (to-json-bts {:log_name topic
                                                                        :n msg-count
                                                                        :stage "hdfs"

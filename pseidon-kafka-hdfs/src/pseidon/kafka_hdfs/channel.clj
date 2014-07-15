@@ -22,7 +22,6 @@
            [java.io DataOutputStream]
            [net.minidev.json JSONValue]))
 
-  
 (defmacro with-info [s body]
   `(let [x# ~body] (info ~s " " x#) x#))
 
@@ -182,11 +181,12 @@
 		  (while (not (Thread/interrupted))
 		    (let [rdr-seq (apply reader-seq topics)]
 	        (doseq [msgs rdr-seq]
-		        (let [msg-id 1]
-		          (try
-	             (do
-	               (publish "pseidon.kafka-hdfs.processor" (create-message msgs ch-dsid msg-id ch-dsid true -1 1)))
-	             (catch java.sql.BatchUpdateException e (info "ignore duplicate message " msg-id)))))))))
+                 (let [msg-id 1]
+                      (try
+                        (do
+                          (publish "pseidon.kafka-hdfs.processor" (create-message msgs ch-dsid msg-id ch-dsid true -1 1)))
+                        (catch java.sql.BatchUpdateException e (info "ignore duplicate message " msg-id))))
+                 )))))
 
 
 (defn ^:dynamic channel-init []

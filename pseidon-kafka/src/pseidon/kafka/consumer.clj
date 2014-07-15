@@ -32,6 +32,6 @@
   (ed/close-writer! c)
   (kfk/shutdown-node! c))
 
-(defn messages [c ]
+(defn messages [c]
   "Returns a lazy sequence that will block when data is not available"
     (kfk/msg-seq-buffered! c :step 1000))
