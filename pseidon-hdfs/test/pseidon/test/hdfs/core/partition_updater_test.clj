@@ -21,10 +21,18 @@
             res => #(= (:exit %) 0)))
 
 ;with-timeout [^Long timeout-ms f args & {:keys [notify-f] :or {notify-f notify-error}}
-(fact "Test with-timeout"
+(fact "Test with-timeout function timeout"
       (let [f #(Thread/sleep %)
             notified (atom false)
             res (with-timeout 100 #(do (Thread/sleep %) 1) [10000] :notify-f (fn [x] (swap! notified (fn [x1] true))))]
            res => #(not= (:exit %) 0)
            @notified => true
+           ))
+
+(fact "Test with-timeout no timeout"
+      (let [f #(Thread/sleep %)
+            notified (atom false)
+            res (with-timeout 10000 #(do (Thread/sleep %) {:exit 0 :code 1}) [100] :notify-f (fn [x] (swap! notified (fn [x1] true))))]
+           res => {:exit 0 :code 1}
+           @notified => false
            ))
