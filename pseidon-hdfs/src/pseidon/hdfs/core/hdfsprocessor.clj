@@ -5,8 +5,7 @@
             [clj-time.coerce :refer [from-long]]
             [clj-time.core :refer [year month day hour]]
             [clj-time.format :refer [unparse parse formatter]]
-            [clojure.core.async :refer [>! <! go chan]]
-            [fun-utils.core :refer [go-seq]]
+            [clojure.core.async :refer [>! <! go chan go-loop]]
             [pseidon.core.message :refer [get-ids]]
             [pseidon.core.registry :refer [register ->Processor]]
             [clojure.tools.logging :refer [info error]]
@@ -164,20 +163,24 @@
     
 	  (letfn [
       (recover-ready-messages []
+
+
                               )
             
 	    (copy! []
-             (go-seq
-               (fn [data]
-                   (try
+	           (go-loop []
+	             (if-let [data (<! c)]
+		              (do
+                    (try
                      (let [[ds id local-file remote-file]  data]
-                          ;retry till the file has been uploaded
-                          (while (false? (file->hdfs ds id local-file remote-file))
-                                 (do
-                                   (error "File " local-file " could not be copied to " remote-file " retrying")
-                                   (Thread/sleep 1000))
-                                 ))
-                     (catch Throwable e (error e e))))))
+		                   ;retry till the file has been uploaded
+		                   (while (false? (file->hdfs ds id local-file remote-file))
+		                    (do
+                        (error "File " local-file " could not be copied to " remote-file " retrying")
+                        (Thread/sleep 1000))
+                      ))
+                     (catch Throwable e (error e e)))
+                    (recur)))))
                  
                      
 	                   
@@ -205,7 +208,7 @@
                                  remote-file (str hdfs-dir "/" type-name "/" date-dir "/" host-name "-" file-name) ;construct the remote file-name
                                  ]
                                (info "reading id " id)
-                               (dgo
+                               (go
                                  (>! c [ds id local-file remote-file]) ;here id is the local file
                                  ))))
               (catch Exception e (error e e))))

@@ -6,18 +6,14 @@
 
 
   :dependencies [
-		
-    [org.clojure/clojure "_" :scope "provided"]
-    [org.apache.hadoop/hadoop-hdfs "2.0.0-cdh4.2.0" :scope "provided"]
-    [org.apache.hadoop/hadoop-minicluster "2.0.0-mr1-cdh4.2.0" :scope "test"]
-    [pseidon "_" :scope "provided"
-     :exclusions [org.clojure.core.async]]
-    [fun-utils "0.4.3" :scope "provided"
-     :exclusions [org.clojure.core.async]]
-    [commons-lang "2.6" :scope "provided"]
-    [midje "1.6-alpha2" :scope "test"]
-    [org.clojure/data.json "0.2.3"]
-		]
+
+                  [org.clojure/clojure "_" :scope "provided"]
+                  [org.apache.hadoop/hadoop-core "0.20.203.0" :scope "provided"]
+                  [pseidon "_" :scope "provided"]
+                  [commons-lang "2.6" :scope "provided"]
+                  [midje "1.6-alpha2" :scope "test"]
+                  [org.clojure/data.json "0.2.3"]
+                  ]
   :repositories {
 		 "cloudera"
  		 "https://repository.cloudera.com/artifactory/cloudera-repos/"
