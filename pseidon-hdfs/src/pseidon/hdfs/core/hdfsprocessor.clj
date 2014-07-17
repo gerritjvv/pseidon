@@ -10,6 +10,7 @@
             [pseidon.core.registry :refer [register ->Processor]]
             [clojure.tools.logging :refer [info error]]
             [clojure.data.json :as json]
+            [pseidon.hdfs.core.partition-updater :as updater]
            )
            
    (:import (org.apache.commons.lang StringUtils)
@@ -86,20 +87,21 @@
 
 (defonce c (chan))
 
-(def hdfs-url (get-conf2 "hdfs-url" "hdfs://localhost:8020"))
 
-(defonce hdfs-conf (doto (Configuration.) (.set "fs.default.name" hdfs-url) ))
+(defonce hdfs-conf (delay
+                     (doto (Configuration.) (.set "fs.default.name" (get-conf2 "hdfs-url" "hdfs://localhost:8020")) )))
+
 (defonce fs (ref nil))
 
 
 (defn ^:dynamic get-hdfs-conf []
-  hdfs-conf)
+  @hdfs-conf)
 
 (defn ^:dynamic ^FileSystem get-fs []
   (dosync
     (if (nil? @fs)
       (let [fs2  ;CREATE File system here
-                  (FileSystem/get (get-hdfs-conf)) 
+                  (FileSystem/get (get-hdfs-conf))
                  ]
         (ref-set fs fs2)
         )))
@@ -110,7 +112,7 @@
   (clojure.string/join "/" ["/tmp" "copying" remote-file]))
 
 
-(defn ^:dynamic file->hdfs [^String ds ^String id ^String local-file ^String remote-file]
+(defn ^:dynamic file->hdfs [^String ds ^String id ^String local-file ^String remote-file & {:keys [partition-updater]}]
   "
    Copy(s) a local file to hdfs,
    any exception is printed and false is returned otherwise true is returned
@@ -120,15 +122,18 @@
           ^String temp-path (Path. temp-file)
           ^FileSystem fs (get-fs)]
       
-      (info "Copy " local-file " to hdfs " remote-file " file " hdfs-url " temp file " temp-file)
+      (info "Copy " local-file " to hdfs " remote-file  " temp file " temp-file)
       
       ;we need to first copy to a temp location then rename the file 
       ;once its been copied completely, otherwise the file will be readable halfway through the copy process
       (.copyFromLocalFile fs false (Path. local-file) temp-path)
       
       (if (not (.rename fs temp-path (Path. remote-file)))
-            (do ;create the directories and rename again
-              (.mkdirs fs (-> remote-file clojure.java.io/file .getParent Path.))
+            (let [parent-path (-> remote-file clojure.java.io/file .getParent)] ;create the directories and rename again
+              (.mkdirs fs (Path. parent-path))
+
+              (if partition-updater (partition-updater parent-path))
+
               (if (not (.rename fs temp-path (Path. remote-file)))
                 (throw (RuntimeException. (str "Unable to create file " remote-file))))
               
@@ -153,19 +158,22 @@
                          false
                          ))))
 
-
 (defn ^:dynamic load-processor []
   (let [ ;globals
         local-file-model (get-conf2 "hdfs-local-file-model" 2) ;what local-file-model to apply
         hdfs-dir-model (get-conf2 "hdfs-dir-model" 1) ;what hdfs directory model to apply
-        hdfs-dir (get-conf2 "hdfs-base-dir" "/log/raw") ;get the base hdfs dir 
-        ] 
+        hdfs-dir (get-conf2 "hdfs-base-dir" "/log/raw") ;get the base hdfs dir
+        updater-cmd (get-conf2 "hdfs-partition-update-cmd" "echo")
+        updater-timeout (get-conf2 "hdfs-partition-update-timeout" 10000)
+        updater-f (fn [file]
+                      (updater/with-timeout-async
+                        updater-timeout
+                        #(updater/with-retry 3 updater-cmd %)
+                        file))
+        ]
     
 	  (letfn [
-      (recover-ready-messages []
-
-
-                              )
+      (recover-ready-messages [])
             
 	    (copy! []
 	           (go-loop []
@@ -174,7 +182,7 @@
                     (try
                      (let [[ds id local-file remote-file]  data]
 		                   ;retry till the file has been uploaded
-		                   (while (false? (file->hdfs ds id local-file remote-file))
+		                   (while (false? (file->hdfs ds id local-file remote-file :partition-updater updater-f))
 		                    (do
                         (error "File " local-file " could not be copied to " remote-file " retrying")
                         (Thread/sleep 1000))
@@ -195,11 +203,8 @@
 	    (exec [ {:keys [topic ts ds ids] :as msg } ] ;unpack message
                   (info "hdfs exec -> message " topic " ids " (get-ids msg))
 	          (try
-              (let [
-                     ids (get-ids msg)  ;get the message ids as a sequence
-                     ]
-                   (doseq [id ids
-                           ] ;for each id (the id should be the local file-name) upload the file
+              (let [ids (get-ids msg)];get the message ids as a sequence
+                   (doseq [id ids] ;for each id (the id should be the local file-name) upload the file
                           (let [
                                  ^String local-file id
                                  ^String file-name (-> local-file java.io.File. .getName)

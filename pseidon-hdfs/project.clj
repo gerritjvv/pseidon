@@ -8,7 +8,9 @@
   :dependencies [
 
                   [org.clojure/clojure "_" :scope "provided"]
-                  [org.apache.hadoop/hadoop-core "0.20.203.0" :scope "provided"]
+                  [org.apache.hadoop/hadoop-core "1.2.1" :scope "provided"
+		                    :exclusions [hsqldb]]
+                  [org.apache.hadoop/hadoop-test "1.2.1" :scope "test"]
                   [pseidon "_" :scope "provided"]
                   [commons-lang "2.6" :scope "provided"]
                   [midje "1.6-alpha2" :scope "test"]

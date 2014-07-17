@@ -1,7 +1,11 @@
 (ns pseidon.test.hdfs.core.partition-updater-test
     (:require [pseidon.hdfs.core.partition-updater :refer [error? with-retry with-timeout]]
-             [pseidon.core.conf])
-    (:use [midje.sweet]))
+              [pseidon.hdfs.core.hdfsprocessor :refer [file->hdfs]]
+             [pseidon.core.conf :refer [set-conf!]])
+    (:use [midje.sweet])
+    (:import [org.apache.hadoop.conf Configuration]
+             [org.apache.hadoop.hdfs MiniDFSCluster]
+             [java.io File]))
 
 
 (facts "Test error?"
@@ -36,3 +40,27 @@
            res => {:exit 0 :code 1}
            @notified => false
            ))
+
+
+
+(defn get-dfs-uri [ dfs-cluster]
+       (-> dfs-cluster .getFileSystem .getUri .toString))
+
+
+(defonce
+  test-cluster
+  (delay
+    (let [conf (Configuration.)
+          hdfs-cluster (MiniDFSCluster. conf 1 true nil)
+          ]
+         (.waitActive hdfs-cluster)
+         (set-conf! :hdfs-url (get-dfs-uri hdfs-cluster))
+         hdfs-cluster)))
+
+
+(facts "Test with cluster"
+      (let [updated (atom nil)]
+           @test-cluster
+           (file->hdfs "test" "test" "t.txt" "file_hddfs_test/remotefile.txt" :partition-updater (fn [file] (swap! updated (fn [& args] file))))
+           (Thread/sleep 1000)
+           @updated => "file_hddfs_test"))
