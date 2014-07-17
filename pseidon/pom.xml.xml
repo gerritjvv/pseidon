@@ -350,7 +350,7 @@
 		<dependency>
 			<groupId>org.clojure</groupId>
 			<artifactId>core.async</artifactId>
-			<version>0.1.0-SNAPSHOT</version>
+			<version>0.1.303.0-886421-alpha</version>
 		</dependency>
 		<dependency>
 			<groupId>org.clojure</groupId>

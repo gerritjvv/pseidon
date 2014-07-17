@@ -88,8 +88,8 @@
       </releases>
     </repository>
     <repository>
-      <id>streams-repo</id>
-      <url>https://bigstreams.googlecode.com/svn/mvnrepo/releases</url>
+      <id>spring snapshot</id>
+      <url>http://repo.springsource.org/libs-snapshot</url>
       <snapshots>
         <enabled>true</enabled>
       </snapshots>
@@ -98,8 +98,8 @@
       </releases>
     </repository>
     <repository>
-      <id>spring snapshot</id>
-      <url>http://repo.springsource.org/libs-snapshot</url>
+      <id>streams-repo</id>
+      <url>https://bigstreams.googlecode.com/svn/mvnrepo/releases</url>
       <snapshots>
         <enabled>true</enabled>
       </snapshots>
@@ -133,6 +133,16 @@
       <groupId>goat</groupId>
       <artifactId>goat</artifactId>
       <version>0.1.0-SNAPSHOT</version>
+    </dependency>
+    <dependency>
+      <groupId>robert</groupId>
+      <artifactId>hooke</artifactId>
+      <version>1.3.0</version>
+    </dependency>
+    <dependency>
+      <groupId>riemann-clojure-client</groupId>
+      <artifactId>riemann-clojure-client</artifactId>
+      <version>0.2.11</version>
     </dependency>
     <dependency>
       <groupId>commons-net</groupId>
@@ -197,7 +207,7 @@
     <dependency>
       <groupId>org.clojure</groupId>
       <artifactId>core.async</artifactId>
-      <version>0.1.0-SNAPSHOT</version>
+      <version>0.1.303.0-886421-alpha</version>
     </dependency>
     <dependency>
       <groupId>org.clojure</groupId>
@@ -360,18 +370,6 @@
       <groupId>spyscope</groupId>
       <artifactId>spyscope</artifactId>
       <version>0.1.3</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>clojure-complete</groupId>
-      <artifactId>clojure-complete</artifactId>
-      <version>0.2.3</version>
-      <exclusions>
-        <exclusion>
-          <groupId>org.clojure</groupId>
-          <artifactId>clojure</artifactId>
-        </exclusion>
-      </exclusions>
       <scope>test</scope>
     </dependency>
   </dependencies>

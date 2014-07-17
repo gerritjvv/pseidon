@@ -1,5 +1,4 @@
 (ns pseidon.test.hdfs.core.hdfsprocessor_test
-  
   (:use [pseidon.hdfs.core.hdfsprocessor]
         [midje.sweet]
         [pseidon.core.conf]
