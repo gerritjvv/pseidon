@@ -10,6 +10,8 @@
             [pseidon.core.registry :refer [register ->Processor]]
             [clojure.tools.logging :refer [info error]]
             [clojure.data.json :as json]
+            [clojure.string :as cljstr]
+            [pseidon.core.error-reporting :as reporting]
             [pseidon.hdfs.core.partition-updater :as updater]
            )
            
@@ -146,6 +148,7 @@
                           (clojure.java.io/delete-file local-file true)
                           (info "deleted local-file " local-file)
                           ) )
+      (reporting/send-event {:state "ok" :description (str remote-file) :tags ["hdfs-upload"] :metric 2})
 
       true
       )
@@ -210,7 +213,11 @@
                                  ^String file-name (-> local-file java.io.File. .getName)
                                  [type-name _ _ date-hr] (apply-model local-file-model file-name-parsers file-name); inserts the correct model function
                                  date-dir (apply-model hdfs-dir-model hdfs-dir-formatters date-hr)
-                                 remote-file (str hdfs-dir "/" type-name "/" date-dir "/" host-name "-" file-name) ;construct the remote file-name
+                                 remote-file (str hdfs-dir "/"
+                                                  (cljstr/replace type-name #"-etl" "")
+                                                  "/"
+                                                  date-dir
+                                                  "/" host-name "-" file-name) ;construct the remote file-name
                                  ]
                                (info "reading id " id)
                                (go

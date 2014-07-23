@@ -1,4 +1,4 @@
-(defproject pseidon "2.0.0-SNAPSHOT"
+(defproject pseidon "2.0.1-SNAPSHOT"
   :description "BigData Import Framework"
   :url "https://github.com/gerritjvv/pseidon"
   :license {:name "Eclipse Public License"
@@ -10,7 +10,7 @@
                  [net.openhft/chronicle "2.1-SNAPSHOT"]
                  [goat "0.1.0-SNAPSHOT"]
                  [robert/hooke "1.3.0"]
-                 [riemann-clojure-client "0.2.11"]
+                 ;[pseidon/riemann-clojure-client-proto2.4.1]
                  [commons-net "3.2"]
                  [commons-lang "2.6"]
                  [commons-io "2.4"]

@@ -29,7 +29,7 @@
                                :url "http://www.apache.org/licenses/LICENSE-2.0"}
 
              :versions {
-		        pseidon			      "2.0.0-SNAPSHOT"
+		        pseidon			      "2.0.1-SNAPSHOT"
 			pseidon-suite                 "2.0.0-SNAPSHOT"
                         pseidon-hdfs                  "2.0.0-SNAPSHOT"
 			pseidon-version               "2.0.0-SNAPSHOT"

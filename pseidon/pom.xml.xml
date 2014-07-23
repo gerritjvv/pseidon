@@ -5,7 +5,7 @@
 	<groupId>pseidon</groupId>
 	<artifactId>pseidon</artifactId>
 	<packaging>jar</packaging>
-	<version>2.0.0-SNAPSHOT</version>
+	<version>2.0.1-SNAPSHOT</version>
 	<name>pseidon</name>
 	<description>BigData Import Framework</description>
 	<url>https://github.com/gerritjvv/pseidon</url>
@@ -241,10 +241,11 @@
 			<artifactId>clojure</artifactId>
 			<version>1.6.0</version>
 		</dependency>
+        <!-- we need to use 0.2.0 because any higher versions use protobuf 2.5 and hadoop used 2.4.1-->
         <dependency>
-            <groupId>riemann-clojure-client</groupId>
-            <artifactId>riemann-clojure-client</artifactId>
-            <version>0.2.11</version>
+            <groupId>pseidon</groupId>
+            <artifactId>riemann-clojure-client-proto2.4.1</artifactId>
+            <version>0.2.12-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>robert</groupId>
@@ -335,7 +336,7 @@
 		<dependency>
 			<groupId>fun-utils</groupId>
 			<artifactId>fun-utils</artifactId>
-			<version>0.4.1</version>
+			<version>0.4.3</version>
 		</dependency>
 		<dependency>
 			<groupId>compojure</groupId>

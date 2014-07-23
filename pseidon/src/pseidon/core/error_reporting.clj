@@ -51,9 +51,19 @@
 
 (def log-send-agent (agent nil))
 
-(comment
-  (send-off log-send-agent
-            send-log-to-riemann level throwable message))
+(defn send-event [{:keys [state metric description tags] :or {tags ["log"] metric 1}}]
+      (try
+        (if @riemann-client-ref
+          (riemann/send-event @riemann-client-ref {:host host-name
+                                                   :service "pseidon"
+                                                   :state (str state)
+                                                   :time (System/currentTimeMillis)
+                                                   :metric metric
+                                                   :description (str description)
+                                                   :tags tags
+                                                   } false))
+        (catch Exception e (do (prn e) (.printStackTrace e)))))
+
 (defn- send-logging-event [f & args]
        (let [[_ level throwable message] args]
             (if (not= level :info)

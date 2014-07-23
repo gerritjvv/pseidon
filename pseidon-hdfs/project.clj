@@ -1,4 +1,4 @@
-(defproject pseidon-hdfs "2.0.0-SNAPSHOT"
+(defproject pseidon-hdfs "2.0.1-SNAPSHOT"
   :description "A pseidon data source, channel and processor for writing to hdfs"
   :url "github.com/gerritjvv/pseidon"
   :license {:name "Eclipse Public License"
@@ -19,19 +19,17 @@
   :repositories {
 		 "cloudera"
  		 "https://repository.cloudera.com/artifactory/cloudera-repos/"
-	         "sonatype-oss-public" 
+	   "sonatype-oss-public"
 		 "https://oss.sonatype.org/content/groups/public/"
-          	}
+  }
   
   
   :plugins [
-		[lein-modules "0.3.6"]
+		        [lein-modules "0.3.6"]
             [lein-midje "3.0.1"] 
             [lein-marginalia "0.7.1"] 
             [lein-kibit "0.0.8"]
            ]
-  :warn-on-reflection true
-  
-		)
+  :warn-on-reflection true)
 
 
