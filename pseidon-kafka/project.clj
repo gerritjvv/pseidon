@@ -6,7 +6,7 @@
   
   :dependencies [
                  [org.clojure/core.async "LATEST"]
-                 [kafka-clj "2.1.6"]
+                 [kafka-clj "2.1.7"]
                  [kafka-events-disk "0.2.2-SNAPSHOT"]
                  [midje "1.6-alpha2" :scope "test"]
                  [pseidon "_" :scope "provided"]

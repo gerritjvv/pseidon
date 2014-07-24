@@ -1,4 +1,4 @@
-(defproject pseidon "2.0.1-SNAPSHOT"
+(defproject pseidon "2.0.2-SNAPSHOT"
   :description "BigData Import Framework"
   :url "https://github.com/gerritjvv/pseidon"
   :license {:name "Eclipse Public License"
@@ -18,6 +18,7 @@
                  [org.apache.sshd/sshd-core "0.8.0"]  
                  [com.jcraft/jsch "0.1.50"]
                  [org.clojure/tools.namespace "0.2.4"]
+                 [com.cognitect/transit-clj "0.8.229"]
                  [clj-time "_"]
                  [http-kit "2.1.8"]
                  [fun-utils "_"]
