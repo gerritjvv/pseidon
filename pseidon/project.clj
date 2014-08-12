@@ -10,7 +10,7 @@
                  [net.openhft/chronicle "2.1-SNAPSHOT"]
                  [goat "0.1.0-SNAPSHOT"]
                  [robert/hooke "1.3.0"]
-                 ;[pseidon/riemann-clojure-client-proto2.4.1]
+                 [nt/riemann-clojure-client-proto2.4.1 "0.2.12-SNAPSHOT"]
                  [commons-net "3.2"]
                  [commons-lang "2.6"]
                  [commons-io "2.4"]
