@@ -208,7 +208,7 @@
 
        (if (not= topic "etl-metrics")
          (let [ts (System/currentTimeMillis)]
-              (inc-counter "hdfs-metric-count" msg-count)
+              ;;(inc-counter "hdfs-metric-count" msg-count)
               ((force kafka-writer) {:topic "etl-metrics" :bts (to-json-bts {:log_name topic
                                                                        :n msg-count
                                                                        :stage "hdfs"

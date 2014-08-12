@@ -16,7 +16,8 @@
                  [mysql/mysql-connector-java "5.1.27"]
                  [org.clojure/java.jdbc "0.3.0-alpha4"]
                  [org.tobereplaced/jdbc-pool "0.1.0"]                
-                 [fileape "_"]
+                 [fileape "_" :exclusions [org.apache.hadoop/hadoop-core
+                                           org.clojure/clojure]]
                  [com.taoensso/nippy "2.5.2"] 
                  [net.minidev/json-smart "1.2"]
                  [clj-json "0.5.3"]
