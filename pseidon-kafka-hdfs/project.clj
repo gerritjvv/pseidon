@@ -1,4 +1,4 @@
-(defproject pseidon-kafka-hdfs "2.0.0-SNAPSHOT"
+(defproject pseidon-kafka-hdfs "2.0.1-SNAPSHOT"
   :description "Pseidon pluging that copies data from kafka to hdfs"
   :url "https://github.com/gerritjvv/pseidon"
   :license {:name "Eclipse Public License"

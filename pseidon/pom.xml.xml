@@ -341,7 +341,7 @@
 		<dependency>
 			<groupId>fun-utils</groupId>
 			<artifactId>fun-utils</artifactId>
-			<version>0.4.3</version>
+			<version>0.4.6</version>
 		</dependency>
 		<dependency>
 			<groupId>compojure</groupId>
