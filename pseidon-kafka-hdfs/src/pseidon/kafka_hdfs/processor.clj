@@ -48,13 +48,16 @@
             (destroy [this obj])
             (passivate [this obj])
             (activate [this obj])))]
-    (.pool pool)))
+    (.pool (-> pool (.max 1000)))))
               
 (defn ^JsonParserAndMapper allocate-parser [^ObjectPool parser-object-pool]
-  (.getObj parser-object-pool))
+  (.getObj parser-object-pool)
+; (-> (JsonFactory/create) (.parser))
+)
 
 (defn release-parser [^ObjectPool parser-object-pool obj]
-  (.returnObj parser-object-pool obj))
+  (.returnObj parser-object-pool obj)
+)
 
 (defn get-msg-meter [log-name]
   (let [topic (str ".msgs-written-p/s-" log-name)]
@@ -120,7 +123,7 @@
        (if (nil? bts)
              (error "Receiving null byte messages from  ts ")
              (do
-               (update-meter (get-data-meter topic) (count bts))
+               #(update-meter (get-data-meter topic) (count bts))
                (pseidon.util.Bytes/writeln out bts))
              
              ))
@@ -262,5 +265,4 @@
 
 (fixdelay 20000 
   (info (get-top-fperf 20))))
-
 

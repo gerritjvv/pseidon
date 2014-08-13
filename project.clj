@@ -41,6 +41,6 @@
 			com.taoensso/nippy	      "2.4.1"
 			clj-time 		      "0.5.1"
 			org.clojure/tools.logging     "0.2.3"
-		        fun-utils		      "0.4.6"
-			fileape			      "0.6.6"
+		        fun-utils		      "0.4.7"
+			fileape			      "0.6.7"
 			}})

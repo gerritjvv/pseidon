@@ -45,7 +45,7 @@
 					<copyright>http://www.radiumone.com/</copyright>
 					<distribution>pseidon-kafka-hdfs</distribution>
 					<group>utilties</group>
-					<release>3</release>
+					<release>4</release>
 					<packager>https://github.com/gerritjvv/pseidon</packager>
 					<provides>
 						<provide>pseidon-kafka-hdfs</provide>
@@ -119,7 +119,7 @@
 		<dependency>
 			<groupId>fileape</groupId>
 			<artifactId>fileape</artifactId>
-			<version>0.6.6</version>
+			<version>0.6.7</version>
             <exclusions>
                 <exclusion><groupId>org.apache.hadoop</groupId><artifactId>hadoop-core</artifactId></exclusion>
             </exclusions>
