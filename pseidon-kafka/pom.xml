@@ -33,7 +33,7 @@
 					<copyright>http://www.apache.org/licenses/LICENSE-2.0</copyright>
 					<distribution>pseidon-kafka</distribution>
 					<group>utilties</group>
-					<release>8</release>
+					<release>9</release>
 					<packager>https://github.com/gerritjvv/pseidon/tree/master/pseidon-kafka</packager>
 					<provides>
 						<provide>pseidon-kafka</provide>
@@ -94,7 +94,7 @@
 	    <dependency>
 			<groupId>kafka-clj</groupId>
 			<artifactId>kafka-clj</artifactId>
-			<version>2.3.1</version>
+			<version>2.3.2</version>
 		</dependency>
         <dependency>
             <groupId>kafka-events-disk</groupId>
