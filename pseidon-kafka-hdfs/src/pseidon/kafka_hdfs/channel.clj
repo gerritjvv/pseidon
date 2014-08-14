@@ -22,6 +22,18 @@
            [java.io DataOutputStream]
            [net.minidev.json JSONValue]))
 
+
+(defonce msg-meter-map (ref {}))
+
+(defn get-msg-meter []
+  (let [topic (str "consume-p/s")]
+	  (if-let [m (get @msg-meter-map topic)]
+        m
+	    (let [c (add-meter topic)]
+		    (dosync
+		       (commute msg-meter-map assoc topic c))
+	     c))))
+
 (defmacro with-info [s body]
   `(let [x# ~body] (info ~s " " x#) x#))
 
@@ -186,6 +198,7 @@
                         (do
                           (publish "pseidon.kafka-hdfs.processor" (create-message msgs ch-dsid msg-id ch-dsid true -1 1)))
                         (catch java.sql.BatchUpdateException e (info "ignore duplicate message " msg-id))))
+
                  )))))
 
 
