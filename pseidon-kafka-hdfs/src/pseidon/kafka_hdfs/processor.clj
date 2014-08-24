@@ -164,6 +164,7 @@
                     :base-dir (get-conf2 :writer-basedir "target") 
                     :check-freq (get-conf2 :writer-check-freq 5000) 
                     :rollover-size (get-conf2 :roll-size 134217728)
+                    :rollover-abs-timeout (get-conf2 :roll-abs-timeout Long/MAX_VALUE)
                     :rollover-timeout (get-conf2 :roll-timeout 60000)
                     :roll-callbacks [callback-f]}))
 
@@ -257,12 +258,12 @@
     (catch Exception e (error e e)))
   (info "Shutdown file writers complete"))
 
-;register processor with topic solace
 (register (->Processor "pseidon.kafka-hdfs.processor" start stop exec))
+
 (comment
-(instrument-functions! 'pseidon.kafka-hdfs.processor)
-(instrument-functions! 'fileape.core)
+  (comment
+    (instrument-functions! 'pseidon.kafka-hdfs.processor)
+    (instrument-functions! 'fileape.core)
 
-(fixdelay 20000 
-  (info (get-top-fperf 20))))
-
+    (fixdelay 20000
+      (info (get-top-fperf 20)))))

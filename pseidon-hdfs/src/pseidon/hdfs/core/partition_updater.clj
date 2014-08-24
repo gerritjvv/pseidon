@@ -52,6 +52,6 @@
 
 
 (defn with-timeout-async [^Long timeout-ms f args & {:keys [notify-f] :or {notify-f notify-error}}]
-      (let [^Callable f with-timeout]
+      (let [^Callable f (fn [] (with-timeout timeout-ms f args :notify-f notify-f))]
            (.submit service f)))
 

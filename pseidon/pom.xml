@@ -74,7 +74,7 @@
 					<copyright>http://www.apache.org/licenses/LICENSE-2.0</copyright>
 					<distribution>pseidon</distribution>
 					<group>utilties</group>
-					<release>5</release>
+					<release>10</release>
 					<packager>https://github.com/gerritjvv/pseidon</packager>
 					<provides>
 						<provide>pseidon</provide>
@@ -341,7 +341,7 @@
 		<dependency>
 			<groupId>fun-utils</groupId>
 			<artifactId>fun-utils</artifactId>
-			<version>0.4.8</version>
+			<version>0.4.9</version>
 		</dependency>
 		<dependency>
 			<groupId>compojure</groupId>
