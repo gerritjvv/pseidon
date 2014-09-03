@@ -6,6 +6,7 @@
             [taoensso.nippy :as nippy]
             [clj-json.core :as json]
             [pseidon.kafka-hdfs.json-csv :as json-csv]
+            [pseidon.kafka-hdfs.logpartition :as logpartition]
             [thread-exec.core :refer [get-layout default-pool-manager submit shutdown]]
             [pseidon.core.queue :refer [pool-manager]]
             [pseidon.core.metrics :refer [add-meter update-meter] ]
@@ -184,9 +185,10 @@
             (let [bdata ((get-decoder topic) bts)
                   encoder (get-encoder topic)
                 ts ((get-ts-parser topic) bdata (get-ts-parser-args topic))
-                k (str topic "_" (unparse dateformat (if ts
-                                                       (from-long ts)
-                                                       (from-long (System/currentTimeMillis)))))]
+                partition (logpartition/get-log-hdfs-partition topic)
+                k (str partition "/" topic "_" (unparse dateformat (if ts
+                                                          (from-long ts)
+                                                          (from-long (System/currentTimeMillis)))))]
               ;need to include the option of using an encoder here only if specified
               ;use only the dynamically configured decoders
 
