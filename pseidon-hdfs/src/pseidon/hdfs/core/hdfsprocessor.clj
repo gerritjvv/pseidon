@@ -211,14 +211,18 @@
                           (let [
                                  ^String local-file id
                                  ^String file-name (-> local-file java.io.File. .getName)
+                                 ^String file-path (-> local-file java.io.File.Path .getPath)
                                  [type-name _ _ date-hr] (apply-model local-file-model file-name-parsers file-name); inserts the correct model function
                                  date-dir (apply-model hdfs-dir-model hdfs-dir-formatters date-hr)
-                                 remote-file (str hdfs-dir "/"
-                                                  (cljstr/replace type-name #"-etl" "")
-                                                  "/"
+                                 remote-file (str (cljstr/replace file-path #"/d1/pseidonfiles" "")
+                                                   "/"
                                                   date-dir
                                                   "/" host-name "-" file-name) ;construct the remote file-name
                                  ]
+                               ;(cljstr/replace type-name #"-etl" "")
+                               ;(info "file-path:" file-path)
+                               ;(info "file-name:" file-name)
+                               ;(info "remote-file:" remote-file)
                                (info "reading id " id)
                                (go
                                  (>! c [ds id local-file remote-file]) ;here id is the local file
