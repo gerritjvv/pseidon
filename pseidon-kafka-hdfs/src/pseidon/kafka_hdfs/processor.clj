@@ -1,4 +1,5 @@
 (ns pseidon.kafka-hdfs.processor
+<<<<<<< HEAD
     (:import (com.sun.org.apache.xml.internal.utils ObjectPool))
 
     (:require [pseidon.core.conf :refer [get-conf2]]
@@ -28,6 +29,7 @@
 (def exec-meter (add-meter (str "pseidon.kafka_hdfs.processor")))
 
 (defonce kafka-writer (delay (let [{:keys [writer]} (reg-get-wait "pseidon.kafka.util.datasink" 10000)] writer)))
+
 
 (defonce data-meter-map (ref {}))
 (defonce msg-meter-map (ref {}))
