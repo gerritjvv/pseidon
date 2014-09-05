@@ -9,7 +9,6 @@
             [pseidon.core.message :refer [get-ids]]
             [pseidon.core.registry :refer [register ->Processor]]
             [clojure.tools.logging :refer [info error]]
-            [clojure.data.json :as json]
             [clojure.string :as cljstr]
             [pseidon.core.error-reporting :as reporting]
             [pseidon.hdfs.core.partition-updater :as updater]
@@ -213,18 +212,6 @@
                                  ^String file-name (-> local-file java.io.File. .getName)
                                  ^String file-path (-> local-file java.io.File. .getParent)
                                  [type-name _ _ date-hr] (apply-model local-file-model file-name-parsers file-name); inserts the correct model function
-<<<<<<< HEAD
-                                 date-dir (try
-                                            (apply-model hdfs-dir-model hdfs-dir-formatters date-hr)
-                                            (catch Exception e (do
-                                                                 (error (str "Error processing date for file-name " file-name " error " e))
-                                                                 (throw e))))
-                                 remote-file (str hdfs-dir "/"
-                                                  (cljstr/replace type-name #"-etl" "")
-                                                  "/"
-                                                  date-dir
-                                                  "/" host-name "-" file-name) ;construct the remote file-name
-=======
                                  date-dir (apply-model hdfs-dir-model hdfs-dir-formatters date-hr)
                                  remote-file (if (= file-path "/d1/pseidonfiles")
                                                (str hdfs-dir "/"
@@ -236,12 +223,7 @@
                                                     "/"
                                                    date-dir
                                                    "/" host-name "-" file-name)) ;construct the remote file-name using the configured base + path for a log
->>>>>>> 101b5842620b0676bd0857a966aeb9f1b50bbc0f
                                  ]
-                               ;(info "file-path:" file-path)
-                               ;(info "file-name:" file-name)
-                               ;(info "remote-file:" remote-file)
-                               ;(info "reading id " id)
                                (go
                                  (>! c [ds id local-file remote-file]) ;here id is the local file
                                  ))))

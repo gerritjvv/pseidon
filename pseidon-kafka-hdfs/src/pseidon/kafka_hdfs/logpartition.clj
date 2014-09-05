@@ -17,9 +17,9 @@
 
 (def dblog {:classname  "com.mysql.jdbc.Driver"
             :subprotocol "mysql"
-            :subname (get-conf2 :etl-tracking-subname "//localhost:3306/logcollector")
-            :user (get-conf2 :etl-tracking-user "pseidon")
-            :password (get-conf2 :etl-tracking-password "pseidon")})
+            :subname (get-conf2 :hdfs-partition-db-subname "//localhost:3306/db")
+            :user (get-conf2 :hdfs-partition-db-user "pseidon")
+            :password (get-conf2 :hdfs-partition-db-password "pseidon")})
 
 
 (defonce log-partition-map (ref {}))
@@ -33,7 +33,7 @@
 (defn refresh-map
   "load topics from the kafka-logs-partitions table"
   []
- (if-let [rs (sql/query dblog ["select logname,CONCAT(basepartition,'/',logpartition) as partition from kafka_logs_partitions "]) ]
+ (if-let [rs (sql/query dblog ["select logname,CONCAT(basepartition,'/',logpartition) as partition from hdfs_log_partitions "]) ]
   (update-log-partition-map (reduce (fn [out {:keys [logname partition]}]
                           (assoc out (str logname) (str partition))) {} rs))))
       
