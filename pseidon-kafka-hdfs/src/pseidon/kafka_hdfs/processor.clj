@@ -186,9 +186,14 @@
                   encoder (get-encoder topic)
                 ts ((get-ts-parser topic) bdata (get-ts-parser-args topic))
                 partition (logpartition/get-log-hdfs-partition topic)
-                k (str partition "/" topic "_" (unparse dateformat (if ts
-                                                          (from-long ts)
-                                                          (from-long (System/currentTimeMillis)))))]
+                k (if (= "true" clojure.string/blank? partition)
+                     (str topic "_" (unparse dateformat (if ts
+                                              (from-long ts)
+                                              (from-long (System/currentTimeMillis)))))
+                     (str partition "/" topic "_" (unparse dateformat (if ts
+                                                            (from-long ts)
+                                                            (from-long (System/currentTimeMillis))))))
+                    ]
               ;need to include the option of using an encoder here only if specified
               ;use only the dynamically configured decoders
 
