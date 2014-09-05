@@ -212,7 +212,11 @@
                                  ^String local-file id
                                  ^String file-name (-> local-file java.io.File. .getName)
                                  [type-name _ _ date-hr] (apply-model local-file-model file-name-parsers file-name); inserts the correct model function
-                                 date-dir (apply-model hdfs-dir-model hdfs-dir-formatters date-hr)
+                                 date-dir (try
+                                            (apply-model hdfs-dir-model hdfs-dir-formatters date-hr)
+                                            (catch Exception e (do
+                                                                 (error (str "Error processing date for file-name " file-name " error " e))
+                                                                 (throw e))))
                                  remote-file (str hdfs-dir "/"
                                                   (cljstr/replace type-name #"-etl" "")
                                                   "/"

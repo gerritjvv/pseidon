@@ -18,6 +18,7 @@
                  [org.tobereplaced/jdbc-pool "0.1.0"]                
                  [fileape "_" :exclusions [org.apache.hadoop/hadoop-core
                                            org.clojure/clojure]]
+                 [pjson "0.2.0"]
                  [com.taoensso/nippy "2.5.2"] 
                  [net.minidev/json-smart "1.2"]
                  [clj-json "0.5.3"]

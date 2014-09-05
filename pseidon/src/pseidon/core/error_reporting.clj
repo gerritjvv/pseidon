@@ -34,7 +34,7 @@
          {:host host-name
           :service "pseidon"
           :state (str level)
-          :time (System/currentTimeMillis)
+          :time (int (/ (System/currentTimeMillis) 1000))
           :metric 1
           :description (str message)
           :tags  ["log" (get-log-tag level)]

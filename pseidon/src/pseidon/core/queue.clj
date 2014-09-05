@@ -1,14 +1,15 @@
 (ns pseidon.core.queue
-  (:require [clojure.tools.logging :refer [info error]]
+    (:import
+      [pseidon.core.registry Processor]
+      [java.util.concurrent TimeoutException ArrayBlockingQueue])
+    (:require [clojure.tools.logging :refer [info error]]
             [pseidon.core.conf :refer [get-conf2]]
             [thread-exec.core :refer [get-layout default-pool-manager submit shutdown]]
             [pseidon.core.metrics :refer [add-histogram add-gauge update-histogram add-timer measure-time add-meter update-meter]]
             [pseidon.core.registry :as r]
             [pseidon.core.watchdog :as watchdog])  
   (:use pseidon.core.conf)
-  (:import 
-          [pseidon.core.registry Processor]
-          [java.util.concurrent TimeoutException ArrayBlockingQueue]))
+  )
 
 (def queue-publish-meter (add-meter "pseidon.core.queue.publish-meter"))
 
@@ -42,7 +43,7 @@
 		    (fn [] 
 		      (try 
 		        (exec msg)
-		        (catch Exception e (watchdog/handle-critical-error e "Error while processing publihs")))))
+		        (catch Exception e (watchdog/handle-critical-error e "Error while processing publish'")))))
       (throw (RuntimeException. (str "You can only publish to maps with an exec key specified, the topic " topic " returned " ds))))
     (throw (RuntimeException. (str "No data source found for topic " topic)))))
   

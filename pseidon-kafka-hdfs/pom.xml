@@ -5,7 +5,7 @@
 	<groupId>pseidon-kafka-hdfs</groupId>
 	<artifactId>pseidon-kafka-hdfs</artifactId>
 	<packaging>jar</packaging>
-	<version>2.0.2-SNAPSHOT</version>
+	<version>2.0.3-SNAPSHOT</version>
 	<name>pseidon-kafka-hdfs</name>
 	<description>Pseidon kafka to hdfs import</description>
 	<url>http://example.com/FIXME</url>
@@ -45,7 +45,7 @@
 					<copyright>http://www.radiumone.com/</copyright>
 					<distribution>pseidon-kafka-hdfs</distribution>
 					<group>utilties</group>
-					<release>8</release>
+					<release>10</release>
 					<packager>https://github.com/gerritjvv/pseidon</packager>
 					<provides>
 						<provide>pseidon-kafka-hdfs</provide>
@@ -144,6 +144,11 @@
 			<artifactId>clj-json</artifactId>
 			<version>0.5.3</version>
 		</dependency>
+        <dependency>
+            <groupId>pjson</groupId>
+            <artifactId>pjson</artifactId>
+            <version>0.2.0</version>
+        </dependency>
 		<dependency>
 			<groupId>org.tobereplaced</groupId>
 			<artifactId>jdbc-pool</artifactId>

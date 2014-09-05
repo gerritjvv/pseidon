@@ -8,7 +8,7 @@
             [pseidon.core.tracking :refer [select-ds-messages mark-run! mark-done! deserialize-message]]
      	      [clojure.tools.logging :refer [info error]]
             [taoensso.nippy :as nippy]
-            [clj-json.core :as json]
+            [pjson.core :as pjson]
             [pseidon.kafka-hdfs.json-csv :as json-csv]
             [clj-time.coerce :refer [from-long to-long]]
             [clj-json [core :as json]]
@@ -19,8 +19,7 @@
   (:import (java.util.concurrent Executors TimeUnit)
            (java.util.concurrent.atomic AtomicBoolean)
            [org.apache.commons.lang StringUtils]
-           [java.io DataOutputStream]
-           [net.minidev.json JSONValue]))
+           [java.io DataOutputStream]))
 
 
 (defonce msg-meter-map (ref {}))
@@ -54,11 +53,7 @@
   (nippy/freeze msg))
 
 (defn json-encoder [org-msg msg & _]
-  (let [^java.io.ByteArrayOutputStream bts-array (java.io.ByteArrayOutputStream. (* 2 (count msg)))]
-    (with-open [^java.io.OutputStreamWriter appendable (java.io.OutputStreamWriter. bts-array)]
-       (net.minidev.json.JSONValue/writeJSONString msg appendable))
-    (.toByteArray bts-array)))
-      
+      (pjson/write-str msg))
 
 (defonce ^:constant encoder-map { 
                                  :default default-encoder
@@ -112,7 +107,6 @@
       (sql/with-query-results rs 
                    [(str "select field_name, data_type from source_log_fields f, source_logs_view s where s.log_id = f.log_id and log_name=\"" log "\" order by field_id asc")] 
                    (vec (doall (map (fn [{:keys [field_name data_type]}] [field_name (get-default-value data_type)])  rs)))))
-                   
     parser-data))
 
 (defn load-parser-data 
