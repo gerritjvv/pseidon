@@ -45,7 +45,7 @@
 					<copyright>http://www.radiumone.com/</copyright>
 					<distribution>pseidon-kafka-hdfs</distribution>
 					<group>utilties</group>
-					<release>10</release>
+					<release>13</release>
 					<packager>https://github.com/gerritjvv/pseidon</packager>
 					<provides>
 						<provide>pseidon-kafka-hdfs</provide>
@@ -147,7 +147,7 @@
         <dependency>
             <groupId>pjson</groupId>
             <artifactId>pjson</artifactId>
-            <version>0.2.0</version>
+            <version>0.2.1</version>
         </dependency>
 		<dependency>
 			<groupId>org.tobereplaced</groupId>

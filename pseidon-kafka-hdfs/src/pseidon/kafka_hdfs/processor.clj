@@ -1,5 +1,4 @@
 (ns pseidon.kafka-hdfs.processor
-<<<<<<< HEAD
     (:import (com.sun.org.apache.xml.internal.utils ObjectPool))
 
     (:require [pseidon.core.conf :refer [get-conf2]]
