@@ -1,4 +1,4 @@
-(defproject pseidon-hdfs "2.0.1-SNAPSHOT"
+(defproject pseidon-hdfs "2.0.2-SNAPSHOT"
   :description "A pseidon data source, channel and processor for writing to hdfs"
   :url "github.com/gerritjvv/pseidon"
   :license {:name "Eclipse Public License"
@@ -14,7 +14,6 @@
                   [pseidon "_" :scope "provided"]
                   [commons-lang "2.6" :scope "provided"]
                   [midje "1.6-alpha2" :scope "test"]
-                  [org.clojure/data.json "0.2.3"]
                   ]
   :repositories {
 		 "cloudera"

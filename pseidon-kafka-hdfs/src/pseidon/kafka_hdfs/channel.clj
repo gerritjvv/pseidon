@@ -11,11 +11,10 @@
             [pjson.core :as pjson]
             [pseidon.kafka-hdfs.json-csv :as json-csv]
             [clj-time.coerce :refer [from-long to-long]]
-            [clj-json [core :as json]]
             [clj-time.format :refer [unparse formatter]]
             [clojure.java.jdbc :as sql]
-            [fun-utils.core :refer [fixdelay]]
-            [org.tobereplaced.jdbc-pool :refer [pool]])
+            [org.tobereplaced.jdbc-pool :refer [pool]]
+            [fun-utils.core :refer [fixdelay]])
   (:import (java.util.concurrent Executors TimeUnit)
            (java.util.concurrent.atomic AtomicBoolean)
            [org.apache.commons.lang StringUtils]

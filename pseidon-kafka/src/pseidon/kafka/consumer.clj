@@ -2,7 +2,6 @@
     (:require
               [clojure.tools.logging :refer [info error ]]
               [kafka-clj.consumer.node :as kfk]
-              [kafka-events-disk.core :as ed]
               [clojure.tools.logging :refer [info]])
     )
 

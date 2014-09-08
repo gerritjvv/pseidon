@@ -29,7 +29,7 @@
                                :url "http://www.apache.org/licenses/LICENSE-2.0"}
 
              :versions {
-		        pseidon			      "2.0.1-SNAPSHOT"
+		        pseidon			      "2.0.2-SNAPSHOT"
 			pseidon-suite                 "2.0.0-SNAPSHOT"
                         pseidon-hdfs                  "2.0.0-SNAPSHOT"
 			pseidon-version               "2.0.0-SNAPSHOT"
@@ -42,5 +42,5 @@
 			clj-time 		      "0.5.1"
 			org.clojure/tools.logging     "0.2.3"
 		        fun-utils		      "0.4.9"
-			fileape			      "0.6.9"
+			fileape			      "0.6.10"
 			}})

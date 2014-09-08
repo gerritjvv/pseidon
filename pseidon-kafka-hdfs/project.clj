@@ -1,4 +1,4 @@
-(defproject pseidon-kafka-hdfs "2.0.2-SNAPSHOT"
+(defproject pseidon-kafka-hdfs "2.0.5-SNAPSHOT"
   :description "Pseidon pluging that copies data from kafka to hdfs"
   :url "https://github.com/gerritjvv/pseidon"
   :license {:name "Eclipse Public License"
@@ -12,19 +12,20 @@
            ]
 
   :dependencies [
-                 [pseidon "_" :scope "provided"]
+                 [pseidon "_" :scope "provided" :exclusions [
+                                                              clj-http
+                                                              org.clojure/tools.logging
+                                                              com.fasterxml.jackson.core/jackson-core
+                                                              commons-httpclient
+                                                             ]]
                  [mysql/mysql-connector-java "5.1.27"]
                  [org.clojure/java.jdbc "0.3.0-alpha4"]
                  [org.tobereplaced/jdbc-pool "0.1.0"]                
                  [fileape "_" :exclusions [org.apache.hadoop/hadoop-core
-                                           org.clojure/clojure]]
-                 [pjson "0.2.1"]
+                                           org.clojure/clojure
+                                           fun-utils
+                                           org.clojure/tools.logging]]
+                 [pjson "0.2.2-SNAPSHOT" :exclusions [cheshire]]
                  [com.taoensso/nippy "2.5.2"] 
-                 [net.minidev/json-smart "1.2"]
-                 [clj-json "0.5.3"]
-                 [io.fastjson/boon "0.18"]
-                 [nf.fr.eraasoft/objectpool "1.1.2"]
                  [org.clojure/clojure "_"]
-                 [midje "1.6-alpha2" :scope "test"]]
-
-  )
+                 [midje "1.6-alpha2" :scope "test" :exclusions [clj-time]]])

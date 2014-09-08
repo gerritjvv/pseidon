@@ -3,7 +3,7 @@
   <groupId>pseidon-hdfs</groupId>
   <artifactId>pseidon-hdfs</artifactId>
   <packaging>jar</packaging>
-  <version>0.2.1-SNAPSHOT</version>
+  <version>0.2.2-SNAPSHOT</version>
   <name>pseidon-hdfs</name>
   <description>A pseidon data source, channel and processor for writing to hdfs</description>
   <url>github.com/gerritjvv/pseidon</url>
@@ -43,7 +43,7 @@
 						<copyright>http://www.apache.org/licenses/LICENSE-2.0</copyright>
 						<distribution>pseidon-hdfs</distribution>
 						<group>utilties</group>
-						<release>3</release>
+						<release>1</release>
 						<packager>http://code.google.com/p/</packager>
 						<provides>
 							<provide>pseidon-hdfs</provide>
