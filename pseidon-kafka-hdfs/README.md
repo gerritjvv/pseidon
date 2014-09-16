@@ -27,7 +27,7 @@ kafka-hdfs-default-decoder
 
 #### Database configuration
 
-There are three tables:
+There are four tables:
 
 * kafka_log_encoders
 
@@ -63,6 +63,18 @@ There are three tables:
 | log_id                  | int(11)       | NO   | PRI | NULL    |       |
 | log_name                | varchar(128)  | YES  |     | NULL    |       |
 +-------------------------+---------------+------+-----+---------+-------+
+```
+
+* hdfs_log_partitions;
+
+```
++---------------+--------------+------+-----+---------+-------+
+| Field         | Type         | Null | Key | Default | Extra |
++---------------+--------------+------+-----+---------+-------+
+| logname       | varchar(100) | NO   | PRI | NULL    |       |
+| basepartition | varchar(200) | YES  |     | NULL    |       |
+| logpartition  | varchar(200) | YES  |     | NULL    |       |
++---------------+--------------+------+-----+---------+-------+
 ```
 
 By default the properties file should contain the default encoders that should be used for most of the logs, and only use the database tables
@@ -110,6 +122,24 @@ this can be done on a topic basis or globally for all messages.
 The value must be a vector or list.
 
 The default used s ```clojure ["ts"]```
+
+### How to configure HDFS Log Partitions
+The default configuration uses a base directory and places the log under a directory named as topic.
+
+The base directory can be configured as the following property is pseidon.edn : hdfs-base-dir
+         e.g.: /$base_dir/$topic_dir
+
+The partitions can also be made configurable for each log using the hdfs_log_partitions table.
+This table contains the mapping for a log and the final destination where files  will be stored under hdfs.
+The mapping contains
+               log_name : basepartition and  logpartition
+               e.g.: The files for a certain topic log will be stored at the following location locally and hdfs: /$base_partition/$log_partition
+ 
+The log partition table can be configured using the following properties in pseidon.edn to fetch the entries from hdfs_log_partitions table:
+:hdfs-partition-db-subname 
+:hdfs-partition-db-user 
+:hdfs-partition-db-password
+
 
 ## License
 

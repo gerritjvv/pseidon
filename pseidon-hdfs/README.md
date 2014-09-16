@@ -20,7 +20,14 @@ The message structure expected is:
 
 ##HDFS Directories
 
-All files are uploaded under the base directory $hdfs-base-dir which is set in the pseidon.edn configuration, plus the combination of directories depending on the date in the filename.
+The files are uploaded using 2 options:
+1. Default: construct the remote file-name using default base and topic name for a log, under the base directory $hdfs-base-dir which is set in the pseidon.edn configuration, 
+  plus the combination of directories depending on the date in the filename.
+   eg: $base/$topic/dt=<dt>/hr=<hr>
+   
+2. construct the remote file-name using the configured base + path for a log,under the base directory $hdfs-base-dir which is set in the pseidon.edn configuration,
+   plus the combination of directories with path and date in the filename.
+   eg: $base/$path_specified_for_topic/dt=<dt>/hr=<hr>
 
 Where files are uploaded depends on:
 
@@ -34,8 +41,8 @@ Where files are uploaded depends on:
  
 The final directory is:
 
-$basedir "/" $message.id[topic] "/" $datedir
-
+Default:$basedir "/" $message.id[topic] "/" $datedir
+with path specified for topic:$basedir "/" $topic_path"/"$datedir
 
 
 ## License

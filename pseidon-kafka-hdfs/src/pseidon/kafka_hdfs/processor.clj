@@ -7,6 +7,7 @@
               [taoensso.nippy :as nippy]
               [pjson.core :as pjson]
               [pseidon.kafka-hdfs.json-csv :as json-csv]
+              [pseidon.kafka-hdfs.logpartition :as logpartition]
               [thread-exec.core :refer [get-layout default-pool-manager submit shutdown]]
               [pseidon.core.queue :refer [pool-manager]]
               [pseidon.core.metrics :refer [add-meter update-meter]]
@@ -152,10 +153,17 @@
        [topic bts bdata]
        (let [encoder (get-encoder topic)
              ts ((get-ts-parser topic) bdata (get-ts-parser-args topic))
-             k (str topic "_" (unparse dateformat (if ts
-                                                    (try (from-long ts)
-                                                         (catch IllegalArgumentException e (do (error (str "error reading ts: " bdata)) (throw e))))
-                                                    (from-long (System/currentTimeMillis)))))]
+             partition (logpartition/get-log-hdfs-partition topic)
+             k (if (= "true" clojure.string/blank? partition)
+                  (str topic "_" (unparse dateformat (if ts
+                                           (try (from-long ts)
+                                                       (catch IllegalArgumentException e (do (error (str "error reading ts: " bdata)) (throw e))))
+                                           (from-long (System/currentTimeMillis)))))
+                  (str partition "/" topic "_" (unparse dateformat (if ts
+                                           (try (from-long ts)
+                                                       (catch IllegalArgumentException e (do (error (str "error reading ts: " bdata)) (throw e))))
+                                           (from-long (System/currentTimeMillis))))))
+             ]
             {:topic topic :k k :bts (get-bytes (encoder bts bdata))}))
 
 (defn- create-ts-tuple1
