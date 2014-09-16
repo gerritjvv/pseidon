@@ -126,20 +126,26 @@ The default used s ```clojure ["ts"]```
 ### How to configure HDFS Log Partitions
 The default configuration uses a base directory and places the log under a directory named as topic.
 
-The base directory can be configured as the following property is pseidon.edn : hdfs-base-dir
-         e.g.: /$base_dir/$topic_dir
+The base directory can be configured as the following property in pseidon.edn: 
+```
+hdfs-base-dir
+e.g.: /$base_dir/$topic_dir
+```
 
 The partitions can also be made configurable for each log using the hdfs_log_partitions table.
 This table contains the mapping for a log and the final destination where files  will be stored under hdfs.
-The mapping contains
-               log_name : basepartition and  logpartition
-               e.g.: The files for a certain topic log will be stored at the following location locally and hdfs: /$base_partition/$log_partition
+The mapping contains:
+```
+log_name : basepartition and  logpartition
+e.g.: The files for a certain topic log will be stored at the following location locally and hdfs: /$base_partition/$log_partition
+```
  
 The log partition table can be configured using the following properties in pseidon.edn to fetch the entries from hdfs_log_partitions table:
+```
 :hdfs-partition-db-subname 
 :hdfs-partition-db-user 
 :hdfs-partition-db-password
-
+```
 
 ## License
 
