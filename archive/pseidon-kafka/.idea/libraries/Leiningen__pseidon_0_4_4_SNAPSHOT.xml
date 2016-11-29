@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="Leiningen: pseidon:0.4.4-SNAPSHOT">
+    <CLASSES>
+      <root url="jar://$MAVEN_REPOSITORY$/pseidon/pseidon/0.4.4-SNAPSHOT/pseidon-0.4.4-SNAPSHOT.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

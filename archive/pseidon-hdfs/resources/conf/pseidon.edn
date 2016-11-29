@@ -1,0 +1,31 @@
+;edn configuration file
+;see https://github.com/edn-format/edn
+{
+ :name "server1"
+ :topic-codecs {}
+ :writer-basedir "target"
+ :topic-basedirs {}
+ :plugin-dirs [ "resources/conf/logging.clj"
+                 "resources/plugins/sinks"
+                 "resources/plugins/datasources"
+                 "resources/plugins/channels"
+                  "resources/plugins/processors"]
+ 
+ :worker-queue java.util.concurrent.PriorityBlockingQueue
+ 
+ :repl-port 7112
+ 
+ :zk-url "192.168.56.101:2181"
+ :zk-ns "pseidon"
+ :roll-size 10485760
+ :roll-timeout 30000
+ 
+ :tracking-db-dir "/tmp/pseidontracking"
+ 
+ :view-port 8080
+ 
+ ;messages in the tracking system older than this value are deleted there status are ignored
+ :tracking.expire 2419200000 ; 4 weeks
+ 
+ :hdfs-url "hdfs://localhost:8020" 
+}

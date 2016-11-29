@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="Leiningen: group-redis:0.6.3">
+    <CLASSES>
+      <root url="jar://$MAVEN_REPOSITORY$/group-redis/group-redis/0.6.3/group-redis-0.6.3.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

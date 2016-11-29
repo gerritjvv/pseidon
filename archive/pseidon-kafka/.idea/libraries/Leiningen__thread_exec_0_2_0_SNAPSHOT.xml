@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="Leiningen: thread-exec:0.2.0-SNAPSHOT">
+    <CLASSES>
+      <root url="jar://$MAVEN_REPOSITORY$/thread-exec/thread-exec/0.2.0-SNAPSHOT/thread-exec-0.2.0-SNAPSHOT.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>
