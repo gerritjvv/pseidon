@@ -4,13 +4,24 @@
     [org.apache.hadoop.hdfs MiniDFSCluster]
     (org.apache.hive.service.server HiveServer2)
     (org.apache.hadoop.hive.conf HiveConf))
-  (:require [pseidon-hdfs.db-service :refer :all]
+  (:require [pseidon-hdfs.db-service :refer :all :as db-service]
             [pseidon-hdfs.mon :as mon]
             [pseidon-hdfs.lifecycle :as hdfs-lifecycle]
             [pseidon-hdfs.hdfs-copy-service :as copy-service]
             [clojure.tools.logging :refer [info]]
             [com.stuartsierra.component :as component]
-            [pseidon-hdfs.hive :as hive]))
+            [pseidon-hdfs.hive :as hive]
+            [clojure.java.jdbc :as j]))
+
+(defonce PSEIDON_LOGS_TABLE_CREATE "CREATE TABLE IF NOT EXISTS pseidon_logs
+                                                        (log VARCHAR(20),
+                                                         format VARCHAR(10), output_format VARCHAR(10),
+                                                         hive_table_name VARCHAR(100), hive_url VARCHAR(100),
+                                                         hive_user VARCHAR(100), hive_password VARCHAR(100),
+                                                         base_partition VARCHAR(100),
+                                                         log_partition VARCHAR(100),
+                                                         quarantine VARCHAR(100)
+                                                         )")
 
 (defn invoke-private-method [obj fn-name-string & args]
   (let [m (first (filter (fn [x] (.. x getName (equals fn-name-string)))
@@ -36,22 +47,29 @@
   [{:keys [uri]}]
   uri)
 
+
 (defn create-test-database []
-  (create-database " mem " (str "target/mydb-" (System/currentTimeMillis)) "SA" " " :adapter :hsqldb))
+  (let [db (create-database " mem " (str "target/mydb-" (System/currentTimeMillis)) "SA" " " :adapter :hsqldb)
+        db' (start-db db)]
+
+    (db-service/with-connection db'
+                                (j/db-do-commands conn
+                                                  PSEIDON_LOGS_TABLE_CREATE))
+    db))
 
 
 
 (defn create-streaming-db [^HiveServer2 server]
   (let [conn (hive/hive-connection "localhost:10000")]
-    (hive/create-db conn "streaming" (str "target/streaminghive/" (System/currentTimeMillis)))
+    (hive/create-db conn "pseidon" (str "target/pseidontest/" (System/currentTimeMillis)))
     server))
 
 
 (defn create-table
-  "Creates a test streaming.$table-name with column tname:string and partitioned by dt, hr"
+  "Creates a test pseidon.$table-name with column tname:string and partitioned by dt, hr"
   [^HiveServer2 server table-name]
   (let [conn (hive/hive-connection "localhost:10000")]
-    (hive/sql-exec conn (str "CREATE TABLE IF NOT EXISTS streaming." table-name " (tname string) PARTITIONED BY (dt string, hr string)"))
+    (hive/sql-exec conn (str "CREATE TABLE IF NOT EXISTS pseidon." table-name " (tname string) PARTITIONED BY (dt string, hr string)"))
     server))
 
 (defn ^HiveConf hive-conf []

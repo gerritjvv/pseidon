@@ -227,12 +227,12 @@
 (defn update-metadata-nils-with-defaults [log-name topic-meta]
   (when (not (empty? topic-meta))
     (-> topic-meta
-        (update-in [:hive_db_name] #(if-null % "streaming"))
+        (update-in [:hive_db_name] #(if-null % "pseidon"))
         (update-in [:hive_table_name] #(if-null % log-name)))))
 
 
 (defn load-topic-meta!
-  "Query kafka_formats and return a map with the columns selecting including :hive_db_name which is derived from add-hive-db-name"
+  "Query pseidon_logs and return a map with the columns selecting including :hive_db_name which is derived from add-hive-db-name"
   [log-name db]
   (let [query (str
                 "select base_partition,
@@ -242,7 +242,7 @@
                         quarantine,
                         hive_user,
                         hive_password
-                        from kafka_formats where log='" log-name "'")
+                        from pseidon_logs where log='" log-name "'")
         ]
 
     (info "load-topic-meta!: query " query)

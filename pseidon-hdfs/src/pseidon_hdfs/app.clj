@@ -3,7 +3,6 @@
             [clojure.tools.logging :refer [info error]]
             [pseidon-hdfs.nrepl-service :refer [create-nrepl-service]]
             [pseidon-hdfs.hdfs-copy-service :refer [create-hdfs-copy-service]]
-            [pseidon-hdfs.riemann-service :refer [create-riemann-service]]
             [pseidon-hdfs.mon :refer [create-monitor-service]]
             [com.stuartsierra.component :as component])
   (:gen-class))
@@ -20,8 +19,6 @@
            (component/system-map
              :monitor-service (create-monitor-service conf)
              :nrepl-service (create-nrepl-service conf)
-
-             :riemann-service (create-riemann-service conf)
 
              :db (create-database (get conf :hdfs-db-host)
                                   (get conf :hdfs-db-name)

@@ -10,13 +10,13 @@
   (:use midje.sweet))
 
 
-;select base_partition, log_partition, hive_url, hive_table_name from kafka_formats where log
+;select base_partition, log_partition, hive_url, hive_table_name from pseidon_logs where log
 (def system (atom {}))
 (defn start []
   (let [db (component/start (test-utils/create-test-database))]
     (db-service/with-connection db
                                 (j/db-do-commands conn
-                                                  "CREATE TABLE IF NOT EXISTS kafka_formats
+                                                  "CREATE TABLE IF NOT EXISTS pseidon_logs
                                                         (log VARCHAR(20),
                                                          format VARCHAR(10), output_format VARCHAR(10),
                                                          hive_table_name VARCHAR(100), hive_url VARCHAR(100),
@@ -27,10 +27,10 @@
                                                          )"))
 
     ;;note these two commands need to be run separately, on the latest jdbc versions
-    ;;in a single sessions the kafka_formats is not available till the connection session is flushed
+    ;;in a single sessions the pseidon_logs is not available till the connection session is flushed
     (db-service/with-connection db
                                 (j/db-do-commands conn
-                                                  "INSERT INTO kafka_formats (hive_url, base_partition, log_partition, log, quarantine, hive_password, hive_user) VALUES('jdbc:mysql://localhost:3306/abc', '/newbase/path', 'abc', 'mylog', '/errorlogs', 'mypwd', 'myuser')"))
+                                                  "INSERT INTO pseidon_logs (hive_url, base_partition, log_partition, log, quarantine, hive_password, hive_user) VALUES('jdbc:mysql://localhost:3306/abc', '/newbase/path', 'abc', 'mylog', '/errorlogs', 'mypwd', 'myuser')"))
     {:db db}))
 
 (defn stop [{:keys [db]}]
@@ -53,11 +53,11 @@
                                                                                    :quarantine      "/errorlogs"}
 
 
-                              (hdfs-copy-service/get-topic-meta cache "nolog") => {:base_partition  "/log/raw2"
-                                                                                   :hive_db_name    "streaming"
+                              (hdfs-copy-service/get-topic-meta cache "nolog") => {:base_partition  "/log/pseidon"
+                                                                                   :hive_db_name    "pseidon"
                                                                                    :hive_password   ""
                                                                                    :hive_table_name "nolog"
                                                                                    :hive_url        nil
                                                                                    :hive_user       "hive"
                                                                                    :log_partition   "nolog"
-                                                                                   :quarantine      "/tmp/pseidon-etl-quarantine"}))))
+                                                                                   :quarantine      "/tmp/pseidon-quarantine"}))))

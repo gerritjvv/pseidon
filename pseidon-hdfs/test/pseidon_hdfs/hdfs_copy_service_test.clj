@@ -111,7 +111,7 @@
                 (and
                   (=
                     @hive-called nil)
-                  (pseidon-hdfs.hdfs-util/hdfs-path-exists? (file-system hdfs) (str "/log/raw2/test/dt=20160320/hr=2016032009/" copy-service/host-name "-test-2016-03-20-09.gz"))
+                  (pseidon-hdfs.hdfs-util/hdfs-path-exists? (file-system hdfs) (str "/log/pseidon/test/dt=20160320/hr=2016032009/" copy-service/host-name "-test-2016-03-20-09.gz"))
                   (not (local-file-exists? local-file)))))))
 
 (defn test-copy-bad-file-to-quarantine [{:keys [hdfs]}]
@@ -138,7 +138,7 @@
                 ;;test that the file exists, and the local file has been deleted
                 ;;also test that the hive add partition was not called
                 (and
-                  (pseidon-hdfs.hdfs-util/hdfs-path-exists? (file-system hdfs) (str "/tmp/pseidon-etl-quarantine/test/dt=20160320/hr=2016032009/" copy-service/host-name "-test-2016-03-20-09.gz")))))))
+                  (pseidon-hdfs.hdfs-util/hdfs-path-exists? (file-system hdfs) (str "/tmp/pseidon-quarantine/test/dt=20160320/hr=2016032009/" copy-service/host-name "-test-2016-03-20-09.gz")))))))
 
 (deftest copy-service-test
   ;; suspend test till a way of testing with a nil hive url or providing the url can be done
