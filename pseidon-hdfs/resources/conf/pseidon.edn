@@ -21,4 +21,8 @@
  ;:hdfs-copy-freq 500
  ;:copy-threads 8
 
+
+ ;:secure false ;;if true the UserGroupInformation::loginUserFromKeytab is used
+ ;:secure-keytab ;; add keyspace here
+ ;;secure-user ;; e.g cloudera@CLOUDERA.COM
 }

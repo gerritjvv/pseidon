@@ -1,6 +1,6 @@
 #!/bin/bash
 # chkconfig: 2345 20 80
-# description: pseidon-hdfs2
+# description: pseidon-hdfs
 #
 
 PATH=/usr/bin:/sbin:/bin:/usr/sbin
@@ -12,10 +12,10 @@ UNKOWN_STAT=4
 
 mkdir -p /var/lock/subsys
 
-[ -f /etc/sysconfig/pseidon-hdfs2 ] && . /etc/sysconfig/pseidon-hdfs2
-lockfile=${LOCKFILE-/var/lock/subsys/pseidon-hdfs2}
-gcronsd="${GCRONSD-/opt/pseidon-hdfs2/bin/watchdog.sh} /opt/pseidon-hdfs2/conf/pseidon.edn"
-gcronsd_stop="${GCRONSD-/opt/pseidon-hdfs2/bin/process.sh} stop /opt/pseidon-hdfs2/conf/pseidon.edn"
+[ -f /etc/sysconfig/pseidon-hdfs ] && . /etc/sysconfig/pseidon-hdfs
+lockfile=${LOCKFILE-/var/lock/subsys/pseidon-hdfs}
+gcronsd="${GCRONSD-/opt/pseidon-hdfs/bin/watchdog.sh} /opt/pseidon-hdfs/conf/pseidon.edn"
+gcronsd_stop="${GCRONSD-/opt/pseidon-hdfs/bin/process.sh} stop /opt/pseidon-hdfs/conf/pseidon.edn"
 
 REGEX1="pseidon_hdfs.watchdog"
 REGEX2="pseidon_hdfs.pseidon_hdfs"
@@ -48,10 +48,10 @@ start() {
   else
     echo -n $"Starting pseidon: "
 
-    touch /opt/pseidon-hdfs2/log/serverlog.log
-    chmod -R 777 /opt/pseidon-hdfs2/log/serverlog.log
+    touch /opt/pseidon-hdfs/log/serverlog.log
+    chmod -R 777 /opt/pseidon-hdfs/log/serverlog.log
 
-    su - ${PSEIDON_USER:-pseidon} -l -m -c "exec $gcronsd < /dev/null >> /opt/pseidon-hdfs2/log/serverlog.log 2>&1 &"
+    su - ${PSEIDON_USER:-pseidon} -l -m -c "exec $gcronsd < /dev/null >> /opt/pseidon-hdfs/log/serverlog.log 2>&1 &"
 
     counter=0
     while [ $counter -lt 30 ]
@@ -75,9 +75,9 @@ stop() {
   RETVAL=$?
 
   if [ $RETVAL = $OK_STAT ]; then
-    echo -n "Stopping pseidon-hdfs2: "
+    echo -n "Stopping pseidon-hdfs: "
 
-    su - ${PSEIDON_USER:-pseidon} -l -m -c "exec $gcronsd_stop < /dev/null >> /opt/pseidon-hdfs2/log/serverlog.log 2>&1 &"
+    su - ${PSEIDON_USER:-pseidon} -l -m -c "exec $gcronsd_stop < /dev/null >> /opt/pseidon-hdfs/log/serverlog.log 2>&1 &"
     kill_proc
       
     counter=0
@@ -94,7 +94,7 @@ stop() {
 
     [ $RETVAL = $DEAD_STAT ] && rm -f ${lockfile} && echo "OK"
   else
-    echo "No pseidon-hdfs2 instance is running"
+    echo "No pseidon-hdfs instance is running"
     RETVAL=$DEAD_STAT
   fi
 

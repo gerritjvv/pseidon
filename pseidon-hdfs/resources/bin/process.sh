@@ -24,6 +24,21 @@ fi
 
 JAVA=$JAVA_HOME/bin/java
 
+if [ ! -f "$JAVA" ]; then
+ echo "JAVA_HOME is not correctly configured in $SOURCE, searching for java"
+ ## try to find java
+
+ for java_exec in $(find /usr/lib/jvm  -type f -executable -name 'java' | head -n 1);
+ do
+
+    JAVA="$java_exec"
+    JAVA_HOME="`dirname $java_exec`/../"
+
+    echo "USING $JAVA"
+    echo "JAVA_HOME $JAVA_HOME"
+ done
+
+fi
 
 if [ -z "$JAVA_HEAP" ]; then
 export JAVA_HEAP="-Xmx4096m -Xms1024m -XX:MaxDirectMemorySize=2048M"

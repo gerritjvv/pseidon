@@ -7,13 +7,14 @@
     "}
   pseidon-hdfs.hdfs-copy-service
   (:import [java.io File IOException DataOutputStream]
-           (org.apache.hadoop.fs FileSystem)
-           (org.apache.hadoop.conf Configuration)
-           [java.util.concurrent ExecutorService TimeUnit]
-           (org.joda.time DateTime)
-           (org.apache.commons.lang StringUtils)
-           (java.util.concurrent.atomic AtomicBoolean)
-           (java.net InetAddress))
+    (org.apache.hadoop.fs FileSystem)
+    (org.apache.hadoop.conf Configuration)
+    [java.util.concurrent ExecutorService TimeUnit]
+    (org.joda.time DateTime)
+    (org.apache.commons.lang StringUtils)
+    (java.util.concurrent.atomic AtomicBoolean)
+    (java.net InetAddress)
+    (org.apache.hadoop.security UserGroupInformation))
   (:require
     [pseidon-hdfs.util :refer :all]
     [pseidon-hdfs.hdfs-util :refer :all]
@@ -510,6 +511,9 @@
         ;;check that the local-dir exists
         (validate-base-dir component base-dir)
 
+           ;;support kerberos login via keytab files
+        (when (:secure conf)
+              (UserGroupInformation/loginUserFromKeytab (str (:secure-user conf)) (str (:secure-keytab conf))))
 
         (when monitor-service
           (hdfs-mon/register monitor-service

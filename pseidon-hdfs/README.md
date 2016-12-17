@@ -12,16 +12,18 @@ Create a mysql database, user and the following table in the database:
 
 ```sql
 CREATE TABLE `pseidon_logs` (
-  `log` varchar(100) NOT NULL,
-  `format` varchar(200) DEFAULT NULL,
-  `output_format` varchar(200) DEFAULT NULL,
+  `log` varchar(100) NOT NULL
+  `format` varchar(200) DEFAULT NULL,        -- TXT:{"ts": 0, "sep": "byte1"}
+  `output_format` varchar(200) DEFAULT NULL, -- TXT
   `base_partition` varchar(200) DEFAULT NULL,
   `log_partition` varchar(200) DEFAULT NULL,
   `hive_table_name` varchar(200) DEFAULT NULL,
   `hive_url` varchar(255),
   `hive_user` varchar(200) DEFAULT NULL,
   `hive_password` varchar(200) DEFAULT NULL,
-  `quarantine` varchar(200) DEFAULT "/tmp/pseidon-etl-quarantine"
+  `quarantine` varchar(200) DEFAULT "/tmp/pseidon-quarantine",
+  `log_group` varchar(100) DEFAULT 'default',
+  `enabled`  `enabled` tinyint(1) DEFAULT '1'
   PRIMARY KEY (`log`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1
 ```
