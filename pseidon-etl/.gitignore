@@ -1,0 +1,8 @@
+# Created by .gitignore support plugin (hsz.mobi)
+target
+.idea
+*.snapshot*
+*.dat
+*.txt
+pseidon_etl2.iml
+pseidon-etl2.iml
