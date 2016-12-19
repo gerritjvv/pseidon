@@ -5,8 +5,13 @@ pom.xml
 /targets/
 .lein-deps-sum
 
+/target/classes
+/build/test
+
 # Java class files
 *.class
+
+*.dat
 
 target/
 pom.xml.tag
