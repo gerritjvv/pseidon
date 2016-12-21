@@ -123,6 +123,7 @@
                             <goal>jdeb</goal>
                         </goals>
                         <configuration>
+                            <compression>gzip</compression>
                             <dataSet>
                                 <data>
                                     <type>template</type>
@@ -130,7 +131,7 @@
                                         <path>/opt/pseidon-hdfs</path>
                                         <path>/opt/pseidon-hdfs/log</path>
                                         <path>/opt/pseidon-hdfs/conf</path>
-                                        <path>/opt/pseidon-hdsf/lib</path>
+                                        <path>/opt/pseidon-hdfs/lib</path>
                                         <path>/opt/pseidon-hdfs/bin</path>
                                     </paths>
                                     <mapper>
@@ -157,13 +158,29 @@
                                         <path>${basedir}/resources/bin/process.sh</path>
                                         <path>${basedir}/resources/bin/watchdog.sh</path>
                                     </paths>
+                                    <dst>/opt/pseidon-hdfs/bin</dst>
                                     <mapper>
                                         <type>perm</type>
                                         <user>${rpm.prop.username}</user>
                                         <group>${rpm.prop.groupname}</group>
                                         <filemode>${rpm.prop.filemode}</filemode>
                                     </mapper>
-                                    <dst>/opt/pseidon-hdfs/bin</dst>
+                                </data>
+                                <data>
+                                    <paths>
+                                        <path>${basedir}/resources/conf/pseidon.edn</path>
+                                        <path>${basedir}/resources/conf/log4j.properties</path>
+                                    </paths>
+
+                                    <type>files</type>
+                                    <dst>/opt/pseidon-hdfs/conf</dst>
+
+                                    <mapper>
+                                        <type>perm</type>
+                                        <user>${rpm.prop.username}</user>
+                                        <group>${rpm.prop.groupname}</group>
+                                        <dirmode>${rpm.prop.filemode.config}</dirmode>
+                                    </mapper>
                                 </data>
                                 <data>
                                     <src>pkg/rpm/init.sh</src>

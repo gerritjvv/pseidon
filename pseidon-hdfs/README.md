@@ -81,7 +81,8 @@ of that used for hadoop and hive in production, refer to the ```pom.xml``` file.
  <tr><td>:hdfs-conf</td><td>
   :hdfs-conf {"fs.default.name" "hdfs://<namenode>8020"
               "fs.defaultFS" "hdfs://<namenode>:8020"
-              "fs.hdfs.impl" "org.apache.hadoop.hdfs.DistributedFileSystem"}
+              "fs.hdfs.impl" "org.apache.hadoop.hdfs.DistributedFileSystem"
+            }
   </td><td>hdfs configuration that points the hadoop client to the hdfs cluster</td></tr>
  <tr><td>:local-dir</td><td>"/tmp"</td><td>The directory from which the data should be loaded from</td></tr>
  <tr><td>:kafka-partition-cache-refresh</td><td>Time in milliseconds that the partition cache refresh will happen, default 30 000</td></tr>
@@ -101,3 +102,30 @@ of that used for hadoop and hive in production, refer to the ```pom.xml``` file.
 <tr><td>:repl-port</td><td>7113 is the repl port that will be opened when the app starts</td></tr>
 </table>
 
+
+# Kerberos
+
+Add the following to ```/etc/sysconfig/pseidon-hdfs```
+
+```
+-Djava.security.auth.login.config=/home/hdfs-user/jaas.conf
+-Djava.security.krb5.conf=/etc/krb5.conf
+-Djavax.security.auth.useSubjectCredsOnly=false
+```
+
+Change ```/opt/pseidon-hdfs/conf/pseidon.edn``` to contain:
+
+Remember to use the "webhdfs" protocol
+
+```
+:hdfs-conf {"fs.default.name" "webhdfs://<namenode>:50070"
+              "fs.defaultFS" "webhdfs://<namenode>:50070"
+              "fs.hdfs.impl" "org.apache.hadoop.hdfs.DistributedFileSystem"
+              "fs.webhdfs.impl" "org.apache.hadoop.hdfs.web.WebHdfsFileSystem"
+              "hadoop.security.authentication", "kerberos"
+              }
+```
+
+For hive doc see: http://stackoverflow.com/questions/21375372/accessing-hive-metastore-using-jdbc-with-kerberos-keytab
+
+For HDFS doc see: https://steveloughran.gitbooks.io/kerberos_and_hadoop/content/sections/jaas.html

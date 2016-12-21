@@ -1,6 +1,6 @@
 ----------------------------------------------------------------
-Wed Nov 30 00:56:32 CET 2016:
-Booting Derby version The Apache Software Foundation - Apache Derby - 10.11.1.1 - (1616546): instance a816c00e-0158-b284-b86d-000012a23318 
+Wed Dec 21 09:24:56 CET 2016:
+Booting Derby version The Apache Software Foundation - Apache Derby - 10.11.1.1 - (1616546): instance a816c00e-0159-207b-b78b-0000134a7a20 
 on database directory /Users/gvanvuuren/checkouts/pseidon/pseidon-hdfs/metastore_db with class loader sun.misc.Launcher$AppClassLoader@6e0be858 
 Loaded from file:/Users/gvanvuuren/.m2/repository/org/apache/derby/derby/10.11.1.1/derby-10.11.1.1.jar
 java.vendor=Oracle Corporation
