@@ -1,9 +1,0 @@
-<component name="libraryTable">
-  <library name="Leiningen: kafka-clj:2.0.5">
-    <CLASSES>
-      <root url="jar://$MAVEN_REPOSITORY$/kafka-clj/kafka-clj/2.0.5/kafka-clj-2.0.5.jar!/" />
-    </CLASSES>
-    <JAVADOC />
-    <SOURCES />
-  </library>
-</component>

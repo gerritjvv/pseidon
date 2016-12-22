@@ -1,9 +1,0 @@
-<component name="libraryTable">
-  <library name="Leiningen: fileape:0.6.1">
-    <CLASSES>
-      <root url="jar://$MAVEN_REPOSITORY$/fileape/fileape/0.6.1/fileape-0.6.1.jar!/" />
-    </CLASSES>
-    <JAVADOC />
-    <SOURCES />
-  </library>
-</component>

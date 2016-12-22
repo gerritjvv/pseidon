@@ -1,8 +1,0 @@
-#!/usr/bin/env bash
-
-
-abspath=$(cd ${0%/*} && echo $PWD/${0##*/})
-BIN_HOME=`dirname $abspath`
-
-mvn install:install-file -Dfile=$BIN_HOME/deps/kafka/kafka_2.9.2-0.8.1.jar -DgroupId=org.apache.kafka -DartifactId=kafka_2.9.2 -Dpackacing=jar -Dversion=0.8.1 -DpomFile=$BIN_HOME/deps/kafka/pom.xml
-
