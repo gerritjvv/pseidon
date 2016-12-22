@@ -1,0 +1,13 @@
+<component name="libraryTable">
+  <library name="Maven: thread-exec:thread-exec:0.1.0-SNAPSHOT">
+    <CLASSES>
+      <root url="jar://$MAVEN_REPOSITORY$/thread-exec/thread-exec/0.1.0-SNAPSHOT/thread-exec-0.1.0-20140224.150857-5.jar!/" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="jar://$MAVEN_REPOSITORY$/thread-exec/thread-exec/0.1.0-SNAPSHOT/thread-exec-0.1.0-20140224.150857-5-javadoc.jar!/" />
+    </JAVADOC>
+    <SOURCES>
+      <root url="jar://$MAVEN_REPOSITORY$/thread-exec/thread-exec/0.1.0-SNAPSHOT/thread-exec-0.1.0-20140224.150857-5-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

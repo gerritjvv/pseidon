@@ -1,0 +1,15 @@
+{
+
+  :etl-threads 2
+
+  :kafka-brokers [{:host "192.168.4.40" :port 9092}
+                  {:host "192.168.4.41" :port 9092}
+                  {:host "192.168.4.42" :port 9092}]
+
+  :kafka-use-earliest true
+  :redis-conf {:host "192.168.4.10" :port 6379 :max-active 10 :timeout 1000}
+  :etl-db-host "//192.168.4.10:3306/testdb"
+  :etl-db-user "dwadmin"
+  :etl-db-pwd "dwadmin"
+
+ }

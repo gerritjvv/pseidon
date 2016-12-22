@@ -1,0 +1,13 @@
+<component name="libraryTable">
+  <library name="Maven: fun-utils:fun-utils:LATEST">
+    <CLASSES>
+      <root url="jar://$MAVEN_REPOSITORY$/fun-utils/fun-utils/LATEST/fun-utils-LATEST.jar!/" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="jar://$MAVEN_REPOSITORY$/fun-utils/fun-utils/LATEST/fun-utils-LATEST-javadoc.jar!/" />
+    </JAVADOC>
+    <SOURCES>
+      <root url="jar://$MAVEN_REPOSITORY$/fun-utils/fun-utils/LATEST/fun-utils-LATEST-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="Leiningen: kafka-events-disk:0.2.0-20140630.145420-1">
+    <CLASSES>
+      <root url="jar://$MAVEN_REPOSITORY$/kafka-events-disk/kafka-events-disk/0.2.0-SNAPSHOT/kafka-events-disk-0.2.0-SNAPSHOT.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

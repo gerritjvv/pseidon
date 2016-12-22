@@ -4,3 +4,31 @@ pom.xml
 /classes/
 /targets/
 .lein-deps-sum
+
+/target/classes
+/build/test
+
+# Java class files
+*.class
+
+*.dat
+
+target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+buildNumber.properties
+.mvn/timing.properties
+
+# Exclude maven wrapper
+!/.mvn/wrapper/maven-wrapper.jar
+
+# Intellij
+*.iml
+.idea/workspace.xml
+.idea/tasks.xml
+.idea/libraries
+

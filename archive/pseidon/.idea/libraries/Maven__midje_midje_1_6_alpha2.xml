@@ -1,0 +1,13 @@
+<component name="libraryTable">
+  <library name="Maven: midje:midje:1.6-alpha2">
+    <CLASSES>
+      <root url="jar://$MAVEN_REPOSITORY$/midje/midje/1.6-alpha2/midje-1.6-alpha2.jar!/" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="jar://$MAVEN_REPOSITORY$/midje/midje/1.6-alpha2/midje-1.6-alpha2-javadoc.jar!/" />
+    </JAVADOC>
+    <SOURCES>
+      <root url="jar://$MAVEN_REPOSITORY$/midje/midje/1.6-alpha2/midje-1.6-alpha2-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

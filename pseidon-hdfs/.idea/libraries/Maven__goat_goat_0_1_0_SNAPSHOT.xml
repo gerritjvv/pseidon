@@ -1,0 +1,13 @@
+<component name="libraryTable">
+  <library name="Maven: goat:goat:0.1.0-SNAPSHOT">
+    <CLASSES>
+      <root url="jar://$MAVEN_REPOSITORY$/goat/goat/0.1.0-SNAPSHOT/goat-0.1.0-20131003.130140-2.jar!/" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="jar://$MAVEN_REPOSITORY$/goat/goat/0.1.0-SNAPSHOT/goat-0.1.0-20131003.130140-2-javadoc.jar!/" />
+    </JAVADOC>
+    <SOURCES>
+      <root url="jar://$MAVEN_REPOSITORY$/goat/goat/0.1.0-SNAPSHOT/goat-0.1.0-20131003.130140-2-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

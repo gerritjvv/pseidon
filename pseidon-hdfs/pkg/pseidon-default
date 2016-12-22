@@ -1,0 +1,3 @@
+export JAVA_HOME=/usr/java/jdk1.8.0_66
+export JAVA_GC="-server"
+export JAVA_HEAP="-Dclojure.compiler.direct-linking=true -Xmx4g -Xms2g -XX:NewSize=2G -XX:MaxDirectMemorySize=1g -XX:+HeapDumpOnOutOfMemoryError  -XX:HeapDumpPath=/tmp/psiedon"

@@ -1,0 +1,7 @@
+{
+
+  :hdfs-threads 2
+  :local-dir "target/testhdfsfiles"
+  :riemann-conf {:host "pipe4"}
+
+}
