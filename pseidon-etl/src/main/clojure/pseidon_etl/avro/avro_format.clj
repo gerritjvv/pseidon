@@ -89,7 +89,7 @@
 
         ^IndexedRecord record ((:decoder format) topic bts)
 
-        ts (if (> ts-index 0) (.get record ts-index) (System/currentTimeMillis))
+        ts (if (> ts-index 0) (* (.get record ts-index)  1000) (System/currentTimeMillis))
         msg (if (> msg-index 0) (.get record msg-index) record)]
 
     (info "DEBUG1: formatMsg " (formats/->FormatMsg format ts bts msg))
