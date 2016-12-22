@@ -24,6 +24,12 @@
                                                          date_format VARCHAR(100)
                                                          )")
 
+(defn invoke-private-method [obj fn-name-string & args]
+  (let [m (first (filter (fn [x] (.. x getName (equals fn-name-string)))
+                         (.. obj getClass getDeclaredMethods)))]
+    (. m (setAccessible true))
+    (. m (invoke obj args))))
+
 (defn shutdown-hdfs [{:keys [^MiniDFSCluster cluster]}]
   (doto cluster .shutdownDataNodes))
 
