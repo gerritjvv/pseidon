@@ -118,6 +118,7 @@ CREATE TABLE IF NOT EXISTS `pseidon_logs` (
   `hive_user` varchar(200) DEFAULT NULL,
   `hive_password` varchar(200) DEFAULT NULL,
   `quarantine` varchar(200) DEFAULT "/tmp/pseidon-quarantine",
+  `date_format` varchar(200) DEFAULT "datehour",
   `log_group` varchar(100) DEFAULT 'default',
   `enabled`  tinyint(1) DEFAULT '1',
   PRIMARY KEY (`log`)

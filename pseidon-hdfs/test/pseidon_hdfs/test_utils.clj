@@ -20,14 +20,9 @@
                                                          hive_user VARCHAR(100), hive_password VARCHAR(100),
                                                          base_partition VARCHAR(100),
                                                          log_partition VARCHAR(100),
-                                                         quarantine VARCHAR(100)
+                                                         quarantine VARCHAR(100),
+                                                         date_format VARCHAR(100)
                                                          )")
-
-(defn invoke-private-method [obj fn-name-string & args]
-  (let [m (first (filter (fn [x] (.. x getName (equals fn-name-string)))
-                         (.. obj getClass getDeclaredMethods)))]
-    (. m (setAccessible true))
-    (. m (invoke obj args))))
 
 (defn shutdown-hdfs [{:keys [^MiniDFSCluster cluster]}]
   (doto cluster .shutdownDataNodes))

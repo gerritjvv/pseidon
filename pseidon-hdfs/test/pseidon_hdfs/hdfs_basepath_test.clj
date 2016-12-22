@@ -23,14 +23,15 @@
                                                          hive_user VARCHAR(100), hive_password VARCHAR(100),
                                                          base_partition VARCHAR(100),
                                                          log_partition VARCHAR(100),
-                                                         quarantine VARCHAR(100)
+                                                         quarantine VARCHAR(100),
+                                                         date_format VARCHAR(100)
                                                          )"))
 
     ;;note these two commands need to be run separately, on the latest jdbc versions
     ;;in a single sessions the pseidon_logs is not available till the connection session is flushed
     (db-service/with-connection db
                                 (j/db-do-commands conn
-                                                  "INSERT INTO pseidon_logs (hive_url, base_partition, log_partition, log, quarantine, hive_password, hive_user) VALUES('jdbc:mysql://localhost:3306/abc', '/newbase/path', 'abc', 'mylog', '/errorlogs', 'mypwd', 'myuser')"))
+                                                  "INSERT INTO pseidon_logs (hive_url, base_partition, log_partition, log, quarantine, date_format, hive_password, hive_user) VALUES('jdbc:mysql://localhost:3306/abc', '/newbase/path', 'abc', 'mylog', '/errorlogs', 'date', 'mypwd', 'myuser')"))
     {:db db}))
 
 (defn stop [{:keys [db]}]
@@ -44,6 +45,7 @@
                       (fact "Test that load-base-path! returns the base path and partition, if none defaults should be returned"
                             (let [cache (fun-utils.cache/create-loading-cache (partial hdfs-copy-service/load-kafka-partition-config (:db @system)))]
                               (hdfs-copy-service/get-topic-meta cache "mylog") => {:base_partition  "/newbase/path",
+                                                                                   :date_format "date",
                                                                                    :hive_db_name    "abc"
                                                                                    :hive_password   "mypwd"
                                                                                    :hive_table_name "mylog"
@@ -54,6 +56,7 @@
 
 
                               (hdfs-copy-service/get-topic-meta cache "nolog") => {:base_partition  "/log/pseidon"
+                                                                                   :date_format "datehour"
                                                                                    :hive_db_name    "pseidon"
                                                                                    :hive_password   ""
                                                                                    :hive_table_name "nolog"
