@@ -14,11 +14,13 @@
     (org.apache.commons.lang StringUtils)
     (java.util.concurrent.atomic AtomicBoolean)
     (java.net InetAddress)
+    (java.security PrivilegedAction)
     (org.apache.hadoop.security UserGroupInformation))
   (:require
     [pseidon-hdfs.util :refer :all]
     [pseidon-hdfs.hdfs-util :refer :all]
     [pseidon-hdfs.metrics :as hdfs-metrics]
+    [pseidon-hdfs.date-path :as date-path]
     [com.climate.claypoole :as cp]
     [pseidon-hdfs.mon :as hdfs-mon]
     [pseidon-hdfs.db-service :refer [with-connection]]
@@ -44,7 +46,6 @@
 (defonce DEFAULT-FILE-WAIT-TIME-MS 30000)
 
 (defonce ^:private ^"[B" new-line-bts (.getBytes "\n"))
-(defonce datetime-formatter (time-f/formatter "yyyy-MM-dd-HH"))
 
 (defonce HDFS-VERSION "0.1.0")
 
@@ -57,6 +58,7 @@
    :log_partition   log-name
    :hive_db_name    "pseidon"
    :hive_table_name (topic->tablename log-name)
+   :date_format     "datehour"
    :quarantine      "/tmp/pseidon-quarantine"
    :hive_url        nil
    :hive_user       "hive"
@@ -108,27 +110,11 @@
 (defn file-name->topic [file]
   (->> file io/file .getName (re-find #"(.+)-\d\d\d\d-\d\d-\d\d-\d\d") second))
 
-(defn remove-first-slash
-  "Remove the front slash in a path if it exists"
-  [^String path]
-  (StringUtils/removeStart path "/"))
-
-(defn remove-last-slash
-  "Remove the front slash in a path if it exists"
-  [^String path]
-  (StringUtils/removeEnd path "/"))
-
-
-(defn create-remote-file-name ^String [base-dir topic-partition file]
+(defn create-remote-file-name ^String [base-dir date_format topic-partition file]
   (let [file-name (-> file io/file .getName)
         date (file-name->date file)]
     (if (and topic-partition date)
-      (let [^DateTime dt (time-f/parse datetime-formatter date)
-            y (.getYear dt)
-            m (padd-zero (.getMonthOfYear dt))
-            d (padd-zero (.getDayOfMonth dt))
-            h (padd-zero (.getHourOfDay dt))]
-        (str (remove-last-slash base-dir) "/" (remove-last-slash (remove-first-slash topic-partition)) "/dt=" y m d "/hr=" y m d h "/" host-name "-" file-name))
+      (date-path/date-path date_format base-dir topic-partition host-name date file-name)
       (throw (RuntimeException. (str "Invalid file name " file " topic " topic-partition " date " date " must be <name>-yyyy-MM-dd-HH.<ext>"))))))
 
 
@@ -240,6 +226,7 @@
                         log_partition,
                         hive_url,
                         hive_table_name,
+                        date_format,
                         quarantine,
                         hive_user,
                         hive_password
@@ -255,7 +242,7 @@
 
 (defn load-kafka-partition-config
   "Load the configuration for log-name from the db
-   returns map with keys [:base_partition, :log_partition, :hive_db_name, :hive_table_name, :quarantine, :hive_url, :hive_user, :hive_password]"
+   returns map with keys [:base_partition, :log_partition, :hive_db_name, :hive_table_name, :quarantine, :date_format :hive_url, :hive_user, :hive_password]"
   [db log-name]
   (do-with-default (default-topic-meta log-name)
                    (load-topic-meta! log-name db)))
@@ -300,7 +287,7 @@
   "Copy a local file to hdfs
    Ensures that the parent directories are created and also
    sets the hive partition on directory creation"
-  [hive-ctx kafka-partition-conf-cache ^FileSystem fs state {:keys [file file-ok]} metrics]
+  [conf hive-ctx kafka-partition-conf-cache ^FileSystem fs state {:keys [file file-ok]} metrics]
   (let [
         topic (check-not-nil (file-name->topic file) (str "No topic could be extracted for the file " file))
         size (.length ^File (io/file file))
@@ -308,6 +295,7 @@
                 log_partition
                 hive_db_name
                 hive_table_name
+                date_format
                 quarantine
                 hive_url
                 hive_user
@@ -317,9 +305,20 @@
         ;;if the file is not ok we push to quarantine
         base-dir (if file-ok base_partition quarantine)
 
-        ^String remote-file (create-remote-file-name base-dir log_partition file)
+        ^String remote-file (create-remote-file-name base-dir date_format log_partition file)
         ^String remote-parent-path (.getParent (io/file remote-file))
-        ^String temp-file (create-temp-file remote-file)]
+        ^String temp-file (create-temp-file remote-file)
+
+        actionRunner (if (:secure conf) (fn [f]
+                                          (let [^ UserGroupInformation g (UserGroupInformation/getLoginUser)]
+                                            (.checkTGTAndReloginFromKeytab g)
+
+                                            (.doAs g (reify PrivilegedAction
+                                                       (run [_]
+                                                         (f))))))
+                                        (fn [f]
+                                          (f)))
+        ]
 
     (if file-ok
       (info "copying file " file " via " temp-file " to " remote-file)
@@ -327,49 +326,51 @@
 
     (update-file-upload-meter metrics file)
 
-    (create-dir-if-not-exist
-      fs remote-parent-path
-      :on-create #(when (and file-ok hive_url)
-                   (info "add-hive-partition [start]")
-                   (try
-                     (hive/with-hive-conn hive-ctx
-                                          hive_url
-                                          hive_user
-                                          hive_password
-                                          (fn [hive-conn]
-                                            (add-hive-partition state
-                                                                hive-conn
-                                                                hive_db_name
-                                                                hive_table_name
-                                                                file
-                                                                topic)))
-                     (catch Exception e
-                       (when (not (shutdown? (:app-status state)))
-                         (error e (str "Error adding partition for " {:topic topic
-                                                                      :file file
-                                                                      :hive-url hive_url
-                                                                      :hive-user hive_user
-                                                                      :hive-table hive_table_name
-                                                                      :hive-db-name hive_db_name})))))
+    (actionRunner (fn []
+                    (create-dir-if-not-exist
+                      fs remote-parent-path
+                      :on-create #(when (and file-ok hive_url)
+                                    (info "add-hive-partition [start]")
+                                    (try
+                                      (hive/with-hive-conn hive-ctx
+                                                           hive_url
+                                                           hive_user
+                                                           hive_password
+                                                           (fn [hive-conn]
+                                                             (add-hive-partition state
+                                                                                 hive-conn
+                                                                                 hive_db_name
+                                                                                 hive_table_name
+                                                                                 file
+                                                                                 topic)))
+                                      (catch Exception e
+                                        (when (not (shutdown? (:app-status state)))
+                                          (error e (str "Error adding partition for " {:topic topic
+                                                                                       :file file
+                                                                                       :hive-url hive_url
+                                                                                       :hive-user hive_user
+                                                                                       :hive-table hive_table_name
+                                                                                       :hive-db-name hive_db_name})))))
 
-                   (info "add-hive-partition [end]")))
-
-
-    (hdfs-copy-file fs file temp-file)
-
-    (if (hdfs-rename fs temp-file remote-file)
-      (delete-local-resources state topic remote-file file size)
-      (when (hdfs-path-exists? fs remote-file)              ;; if we couldnt rename
-        (hdfs-delete fs remote-file)                        ;; delete the remote file, and try the rename again
-        (when (hdfs-rename fs temp-file remote-file)        ;; then delete the local resources again
-          (delete-local-resources state topic remote-file file size))))))
+                                    (info "add-hive-partition [end]")))
 
 
-(defn- copy-f-coll [app-status hive-ctx kafka-partition-conf-cache fs state file metrics]
+                    (hdfs-copy-file fs file temp-file)
+
+                    (if (hdfs-rename fs temp-file remote-file)
+                      (delete-local-resources state topic remote-file file size)
+                      (when (hdfs-path-exists? fs remote-file)              ;; if we couldnt rename
+                        (hdfs-delete fs remote-file)                        ;; delete the remote file, and try the rename again
+                        (when (hdfs-rename fs temp-file remote-file)        ;; then delete the local resources again
+                          (delete-local-resources state topic remote-file file size))))))))
+
+
+(defn- copy-f-coll [conf app-status hive-ctx kafka-partition-conf-cache fs state file metrics]
   (try
     (when-not (shutdown-no-metrics? (:closed state) (:base-dir state))
       (ignore-exception-on-shutdown app-status
                                     file->hdfs
+                                    conf
                                     hive-ctx
                                     kafka-partition-conf-cache
                                     fs
@@ -392,7 +393,7 @@
               (fn [f]
 
                 (when (and (local-path-exists? f) (not (.contains ^String (str f) "/tmp/copying")))
-                  (copy-f-coll (:app-status state) hive-ctx kafka-partition-conf-cache (fs-f) state f metrics)))
+                  (copy-f-coll conf (:app-status state) hive-ctx kafka-partition-conf-cache (fs-f) state f metrics)))
               files)))
 
 (defn copy-metrics-files [component]
@@ -407,7 +408,7 @@
 
         state {:writer writer :closed closed :app-status app-status :base-dir base-dir}]
     (doseq [file (any-metrics-gz-file-seq base-dir)]
-      (copy-f-coll app-status hive-ctx kafka-partition-conf-cache (fs-f) state file metrics))))
+      (copy-f-coll {}  app-status hive-ctx kafka-partition-conf-cache (fs-f) state file metrics))))
 
 
 
@@ -506,14 +507,16 @@
             cache-exec (cp/threadpool 1 :daemon true :name "cache-exec")
             kafka-partition-cache-refresh (get-in component [:conf :kafka-partition-cache-refresh] 60000)
             kafka-partition-conf-cache (binding [fun-cache/*executor* cache-exec]
-                                         (fun-cache/create-loading-cache (partial load-kafka-partition-config db) :refresh-after-write kafka-partition-cache-refresh))]
+                                         (fun-cache/create-loading-cache (partial load-kafka-partition-config db) :refresh-after-write kafka-partition-cache-refresh))
+
+            user-info (when (:secure conf)
+                        (UserGroupInformation/loginUserFromKeytab (str (:secure-user conf)) (str (:secure-keytab conf)))
+                        (UserGroupInformation/loginUserFromSubject (.getSubject (UserGroupInformation/getLoginUser))))
+            ]
 
         ;;check that the local-dir exists
         (validate-base-dir component base-dir)
 
-           ;;support kerberos login via keytab files
-        (when (:secure conf)
-              (UserGroupInformation/loginUserFromKeytab (str (:secure-user conf)) (str (:secure-keytab conf))))
 
         (when monitor-service
           (hdfs-mon/register monitor-service

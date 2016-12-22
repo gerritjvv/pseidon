@@ -46,7 +46,7 @@ The pseidon-etl uses the following tables:
 <tr><td>:consume-step</td><td>10</td><td>The number of messages to include in a single work unit, 10 is the best for pseidon-etl</td></tr>
 <tr><td>:kafka-brokers</td><td>:kafka-brokers [{:host "broker1" :port 9092} {:host "broker2" :port 9092} {:host "broker3" :port 9092}]</td><td>The kafka brokers to read messages from</td></tr>
 <tr><td>:kafka-use-earliest</td><td>false</td><td>On startup when a log's offsets are not saved in the redis storage yet, if false the latest offset is used otherwise the start of the data from kafka in the log is used.</td></tr>
-<tr><td>:redis-conf</td><td>:redis-conf {:host "redis:6379" :heart-beat 5}</td><td>If a single host is provided a single none redis cluster is expected, multiple hosts require a proper redis cluster, kafka offsets are stored in the redis cluster</td></tr>
+<tr><td>:redis-conf</td><td>:redis-conf {:host "redis:6379" :heart-beat 5}</td><td> for password add :password If a single host is provided a single none redis cluster is expected, multiple hosts require a proper redis cluster, kafka offsets are stored in the redis cluster</td></tr>
 <tr><td>:kafka-msg-ch-buffer-size</td><td>50</td><td>Buffer size between the kafka consumer background fetcher threads and the pseidon app</td></tr>
 </table>
 

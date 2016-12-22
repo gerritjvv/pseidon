@@ -32,7 +32,7 @@
 (defn wrap-msg
   "topic:
    msg: foramts/FormatMsg
-   codec: gzip, parquet"
+   codec: gzip, parquet, txt"
   ([topic msg] (wrap-msg topic msg nil))
   ([topic msg codec] (->TopicMsg topic msg codec)))
 
@@ -75,6 +75,8 @@
                   (get-local-dt-hr-str ts)))))
   ([{:keys [topic msg]}]
     ;; msg must be of type formats/FormatMsg
+
+   (info "Get topic-datehr: " (keys msg) " ts " (:ts msg))
    (msg->topic-datehr topic (:ts msg))))
 
 (defn- ^"[B" str->bts [^String s]
@@ -178,7 +180,7 @@
   (get (ape-core/get-env writer-ctx) topic))
 
 (defn parquet-codec? [{:keys [writer-ctx]}]
-  (#{:parquet :r1-parquet} (ape-core/get-codec writer-ctx)))
+  (#{:parquet} (ape-core/get-codec writer-ctx)))
 
 (defn close-writer [{:keys [writer-ctx]}]
   (ape-core/close writer-ctx))

@@ -129,3 +129,5 @@ Remember to use the "webhdfs" protocol
 For hive doc see: http://stackoverflow.com/questions/21375372/accessing-hive-metastore-using-jdbc-with-kerberos-keytab
 
 For HDFS doc see: https://steveloughran.gitbooks.io/kerberos_and_hadoop/content/sections/jaas.html
+
+For some systems, a different user is used than that in which the application is run, see https://hadoop.apache.org/docs/r1.0.4/webhdfs.html#ProxyUsers

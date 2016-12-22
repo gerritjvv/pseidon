@@ -54,6 +54,9 @@
      (let [output-format (topic-service/get-output-format topic (:conf state) (:db state))
            codec (condp = (name output-format)
                    "parquet" :parquet
+                   "txt"     :none
+                   "snappy"  :snappy
+                   "bzip2"   :bzip2
                    :gzip)]
 
        ;note that only messages with a none nil node and batch-ts will be written to the etl map log
