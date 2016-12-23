@@ -76,7 +76,6 @@
   ([{:keys [topic msg]}]
     ;; msg must be of type formats/FormatMsg
 
-   (info "Get topic-datehr: " (keys msg) " ts " (:ts msg))
    (msg->topic-datehr topic (:ts msg))))
 
 (defn- ^"[B" str->bts [^String s]

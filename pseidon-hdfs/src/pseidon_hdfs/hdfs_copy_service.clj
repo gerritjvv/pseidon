@@ -510,9 +510,7 @@
                                          (fun-cache/create-loading-cache (partial load-kafka-partition-config db) :refresh-after-write kafka-partition-cache-refresh))
 
             user-info (when (:secure conf)
-                        (UserGroupInformation/loginUserFromKeytab (str (:secure-user conf)) (str (:secure-keytab conf)))
-                        (UserGroupInformation/loginUserFromSubject (.getSubject (UserGroupInformation/getLoginUser))))
-            ]
+                        (UserGroupInformation/loginUserFromKeytab (str (:secure-user conf)) (str (:secure-keytab conf))))]
 
         ;;check that the local-dir exists
         (validate-base-dir component base-dir)
