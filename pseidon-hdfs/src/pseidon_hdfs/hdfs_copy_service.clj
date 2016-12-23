@@ -17,6 +17,7 @@
     (java.security PrivilegedAction)
     (org.apache.hadoop.security UserGroupInformation))
   (:require
+    [pseidon-hdfs.lifecycle :as life-cycle]
     [pseidon-hdfs.util :refer :all]
     [pseidon-hdfs.hdfs-util :refer :all]
     [pseidon-hdfs.metrics :as hdfs-metrics]
@@ -344,7 +345,7 @@
                                                                                  file
                                                                                  topic)))
                                       (catch Exception e
-                                        (when (not (shutdown? (:app-status state)))
+                                        (when (not (app-shutdown? (:app-status state)))
                                           (error e (str "Error adding partition for " {:topic topic
                                                                                        :file file
                                                                                        :hive-url hive_url
