@@ -22,6 +22,7 @@ CREATE TABLE `pseidon_logs` (
   `hive_user` varchar(200) DEFAULT NULL,
   `hive_password` varchar(200) DEFAULT NULL,
   `quarantine` varchar(200) DEFAULT "/tmp/pseidon-quarantine",
+  `dateformat` varchar(200) DEFAULT "datehour",
   `log_group` varchar(100) DEFAULT 'default',
   `enabled`  `enabled` tinyint(1) DEFAULT '1'
   PRIMARY KEY (`log`)
@@ -87,6 +88,11 @@ of that used for hadoop and hive in production, refer to the ```pom.xml``` file.
  <tr><td>:local-dir</td><td>"/tmp"</td><td>The directory from which the data should be loaded from</td></tr>
  <tr><td>:kafka-partition-cache-refresh</td><td>Time in milliseconds that the partition cache refresh will happen, default 30 000</td></tr>
  <tr><td>:copy-threads</td><td>The number of threads to use for file copying, default 8</td></tr>
+ <tr><td>:proxy-user</td><td>The user that will be used instead of the kerberos signed in user</td></tr>
+ <tr><td>:secure</td><td>Indicates that kerberos authentication is used</td></tr>
+ <tr><td>:secure</td><td>Indicates that kerberos authentication is used</td></tr>
+ <tr><td>:secure-user</td><td>Indicates that kerberos authentication user</td></tr>
+ <tr><td>:secure-keytab</td><td>Indicates that kerberos authentication user keytab</td></tr>
 </table>
 
 ### Other configuration options
