@@ -61,19 +61,30 @@
         encoder (encoder client-reg)
         decoder (decoder client-reg)
 
-        ts-index (get (:props format) "ts")
+        props (:props format)
+
+        ts-parser (cond
+                    (or (get props "ts") (get props "ts_ms")) (let [index (Integer/parseInt (str (get props "ts" (get props "ts_ms"))))]
+                                                                (if (> index -1)
+                                                                  (fn [^IndexedRecord record] (.get record (int index)))
+                                                                  (fn [_] (System/currentTimeMillis))))
+
+                    (get props "ts_sec") (let [index (Integer/parseInt (str (get props "ts_sec")))]
+                                           (fn [^IndexedRecord record] (* (long (.get record (int index))) 1000)))
+
+                    :else
+                    (throw (RuntimeException. (str "avro format must contain either a ts, ts_sec or ts_ms parameter to identify the index of the timestamp"))))
+
         msg-index (get (:props format) "msg")]
 
-    (when (not (and
-                 (StringUtils/isNumeric (str ts-index))
-                 (StringUtils/isNumeric (str msg-index))))
+    (when (not (StringUtils/isNumeric (str msg-index)))
       (throw (RuntimeException. (str "Avro format descriptor must contain ts and msg as int values e.g avro:ts=0;msg=1"))))
 
     (assoc format
       :client-reg client-reg
       :encoder encoder
       :decoder decoder
-      :ts-index (Integer/parseInt (str ts-index))
+      :ts-parser ts-parser
       :msg-index (Integer/parseInt (str msg-index)))))
 
 
@@ -84,12 +95,12 @@
   (.getBytes (str format-msg) "UTF-8"))
 
 (defmethod formats/bts->msg "avro" [conf topic format ^"[B" bts]
-  (let [ts-index (int (:ts-index format))
+  (let [ts-parser (:ts-parser format)
         msg-index (int (:msg-index format))
 
         ^IndexedRecord record ((:decoder format) topic bts)
 
-        ts (if (> ts-index -1) (* (.get record ts-index)  1000) (System/currentTimeMillis))
+        ts  (ts-parser record)
         msg (if (> msg-index -1) (.get record msg-index) record)]
 
     (formats/->FormatMsg format ts bts msg)))

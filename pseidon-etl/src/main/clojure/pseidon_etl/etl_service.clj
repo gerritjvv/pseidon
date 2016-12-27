@@ -89,11 +89,16 @@
         ;loop forever till interrupted
         (try
           (loop [msg (read-msg! node)]
+            (when (and (not msg) (not (pos? (.get counter))))
+              (.incrementAndGet counter))
+
             (when msg
               (load/publish! pool msg)
               (recur (read-msg! node))))
           (catch InterruptedException _ (-> (Thread/currentThread) (.interrupt)))
-          (catch Exception e (error e e)))))))
+          (catch Exception e (error e e))
+          (finally
+            (info "Exit etl publisher")))))))
 
 (defn- shutdown-all [component]
   (util/wait-zero-activity! "etl" (get-in component [:etl-service :activity-counter]))
@@ -158,6 +163,7 @@
               ^AtomicLong activity-counter (:activity-counter writer-service)
               exec-f1 (fn [state msg]
                         (when msg
+                          (prn "GOT message " msg)
                           (.incrementAndGet activity-counter)
                           (exec-etl req-metric state msg)))
 

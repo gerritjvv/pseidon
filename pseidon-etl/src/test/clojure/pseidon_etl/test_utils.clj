@@ -192,7 +192,7 @@
   []
   (component/start (create-test-database)))
 
-(defn writer-service [abs-timeout]
+(defn test-writer-service [abs-timeout]
   (component/start (writer/writer-service
                      {:data-dir (str "target/tests//" (System/currentTimeMillis))
                       :writer {:rollover-abs-timeout abs-timeout}})))

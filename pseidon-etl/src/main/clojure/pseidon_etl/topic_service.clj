@@ -3,7 +3,7 @@
             [pseidon-etl.db-service :refer [with-connection]]
             [pseidon-etl.mon :refer [register]]
             [pseidon-etl.parquet.schema :as parquet-schema]
-            [clojure.tools.logging :refer [info error]]
+            [clojure.tools.logging :refer [info error debug]]
             [kafka-clj.consumer.node :refer [add-topics! remove-topics!]]
             [fun-utils.cache :as cache]
             [fun-utils.core :refer [fixdelay-thread stop-fixdelay]]
@@ -75,6 +75,7 @@
    for any output_format the add-topics! on the kafka node is called, this will start
    kafka consumption of the log"
   [multi-writer-ctx db node logs-to-add]
+  (debug "add-etl-topics: " logs-to-add)
   (add-topics! node logs-to-add))
 
 (defn update-topics!
@@ -83,7 +84,7 @@
   [conf multi-writer-ctx database kafka-node]
   {:pre [conf multi-writer-ctx database kafka-node]}
   (try
-    (info ">>>>>>>>>>> update-topics! ")
+    (debug ">>>>>>>>>>> update-topics! from: " (load-topics conf database))
     (let [topics-ref (get-in kafka-node [:node :topics-ref])
           logs (set (load-topics conf database))
           logs-to-add (clojure.set/difference logs (set @topics-ref))

@@ -65,7 +65,7 @@
                  {}
                  (formats/parse-format "avro:ts=0;msg=1"))
 
-        writer-service (test-utils/writer-service sleep-ms)
+        writer-service (test-utils/test-writer-service sleep-ms)
 
 
         total 1000
