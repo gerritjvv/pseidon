@@ -7,15 +7,15 @@
     "}
   pseidon-hdfs.hdfs-copy-service
   (:import [java.io File IOException DataOutputStream]
-    (org.apache.hadoop.fs FileSystem)
-    (org.apache.hadoop.conf Configuration)
-    [java.util.concurrent ExecutorService TimeUnit]
-    (org.joda.time DateTime)
-    (org.apache.commons.lang StringUtils)
-    (java.util.concurrent.atomic AtomicBoolean)
-    (java.net InetAddress)
-    (java.security PrivilegedAction)
-    (org.apache.hadoop.security UserGroupInformation))
+           (org.apache.hadoop.fs FileSystem)
+           (org.apache.hadoop.conf Configuration)
+           [java.util.concurrent ExecutorService TimeUnit]
+           (org.joda.time DateTime)
+           (org.apache.commons.lang StringUtils)
+           (java.util.concurrent.atomic AtomicBoolean)
+           (java.net InetAddress)
+           (java.security PrivilegedAction)
+           (org.apache.hadoop.security UserGroupInformation))
   (:require
     [pseidon-hdfs.lifecycle :as life-cycle]
     [pseidon-hdfs.util :refer :all]
@@ -139,8 +139,8 @@
 
 (defn gz-file-seq [{:keys [file-wait-time-ms] :or {file-wait-time-ms DEFAULT-FILE-WAIT-TIME-MS}} dir]
   (->> dir io/file file-seq (filter #(and
-                                      (file-filter %)
-                                      (is-older-than % (if (number? file-wait-time-ms) file-wait-time-ms DEFAULT-FILE-WAIT-TIME-MS))))))
+                                       (file-filter %)
+                                       (is-older-than % (if (number? file-wait-time-ms) file-wait-time-ms DEFAULT-FILE-WAIT-TIME-MS))))))
 
 (defn delete-any-crc [dir]
   (try
@@ -311,12 +311,13 @@
         ^String temp-file (create-temp-file remote-file)
 
         actionRunner (if (:secure conf) (fn [f]
-                                          (let [^ UserGroupInformation g (UserGroupInformation/getLoginUser)]
+                                          (let [^UserGroupInformation g (UserGroupInformation/getLoginUser)
+                                                ^UserGroupInformation g2 (get state :proxy g)]
                                             (.checkTGTAndReloginFromKeytab g)
 
-                                            (.doAs g (reify PrivilegedAction
-                                                       (run [_]
-                                                         (f))))))
+                                            (.doAs g2 (reify PrivilegedAction
+                                                        (run [_]
+                                                          (f))))))
                                         (fn [f]
                                           (f)))
         ]
@@ -346,11 +347,11 @@
                                                                                  topic)))
                                       (catch Exception e
                                         (when (not (app-shutdown? (:app-status state)))
-                                          (error e (str "Error adding partition for " {:topic topic
-                                                                                       :file file
-                                                                                       :hive-url hive_url
-                                                                                       :hive-user hive_user
-                                                                                       :hive-table hive_table_name
+                                          (error e (str "Error adding partition for " {:topic        topic
+                                                                                       :file         file
+                                                                                       :hive-url     hive_url
+                                                                                       :hive-user    hive_user
+                                                                                       :hive-table   hive_table_name
                                                                                        :hive-db-name hive_db_name})))))
 
                                     (info "add-hive-partition [end]")))
@@ -360,9 +361,9 @@
 
                     (if (hdfs-rename fs temp-file remote-file)
                       (delete-local-resources state topic remote-file file size)
-                      (when (hdfs-path-exists? fs remote-file)              ;; if we couldnt rename
-                        (hdfs-delete fs remote-file)                        ;; delete the remote file, and try the rename again
-                        (when (hdfs-rename fs temp-file remote-file)        ;; then delete the local resources again
+                      (when (hdfs-path-exists? fs remote-file) ;; if we couldnt rename
+                        (hdfs-delete fs remote-file)        ;; delete the remote file, and try the rename again
+                        (when (hdfs-rename fs temp-file remote-file) ;; then delete the local resources again
                           (delete-local-resources state topic remote-file file size))))))))
 
 
@@ -409,7 +410,7 @@
 
         state {:writer writer :closed closed :app-status app-status :base-dir base-dir}]
     (doseq [file (any-metrics-gz-file-seq base-dir)]
-      (copy-f-coll {}  app-status hive-ctx kafka-partition-conf-cache (fs-f) state file metrics))))
+      (copy-f-coll {} app-status hive-ctx kafka-partition-conf-cache (fs-f) state file metrics))))
 
 
 
@@ -423,7 +424,7 @@
   (.get ^AtomicBoolean closed))
 
 
-(defn copy-files-runner [conf copy-thread-exec app-status hive-ctx kafka-partition-conf-cache fs-f writer closed base-dir metrics]
+(defn copy-files-runner [conf proxy copy-thread-exec app-status hive-ctx kafka-partition-conf-cache fs-f writer closed base-dir metrics]
   (try
     (when-not (shutdown-no-metrics? closed base-dir)
       (copy-files
@@ -432,7 +433,7 @@
         hive-ctx
         kafka-partition-conf-cache
         fs-f
-        (assoc {} :writer writer :closed closed :app-status app-status :base-dir base-dir)
+        (assoc {} :writer writer :closed closed :app-status app-status :base-dir base-dir :proxy proxy)
         base-dir
         metrics))
     (catch Exception e
@@ -511,7 +512,11 @@
                                          (fun-cache/create-loading-cache (partial load-kafka-partition-config db) :refresh-after-write kafka-partition-cache-refresh))
 
             user-info (when (:secure conf)
-                        (UserGroupInformation/loginUserFromKeytab (str (:secure-user conf)) (str (:secure-keytab conf))))]
+                        (UserGroupInformation/loginUserFromKeytab (str (:secure-user conf)) (str (:secure-keytab conf))))
+
+            ;;if a proxy user is specified, this user will be impersonated by the user-info
+            proxy-info (when (:proxy-user conf)
+                         (UserGroupInformation/createProxyUser (:proxy-user conf) (UserGroupInformation/getLoginUser)))]
 
         ;;check that the local-dir exists
         (validate-base-dir component base-dir)
@@ -541,16 +546,17 @@
                                                                            copy-thread-exec
                                                                            (get conf :hdfs-copy-freq 1000)
                                                                            #(copy-files-runner
-                                                                             conf
-                                                                             copy-thread-exec
-                                                                             app-status
-                                                                             hive-ctx
-                                                                             kafka-partition-conf-cache
-                                                                             fs-f
-                                                                             writer
-                                                                             closed
-                                                                             base-dir
-                                                                             metrics))}))))
+                                                                              conf
+                                                                              proxy-info
+                                                                              copy-thread-exec
+                                                                              app-status
+                                                                              hive-ctx
+                                                                              kafka-partition-conf-cache
+                                                                              fs-f
+                                                                              writer
+                                                                              closed
+                                                                              base-dir
+                                                                              metrics))}))))
 
   (stop [component]
     (when (:hdfs-copy-service component)
