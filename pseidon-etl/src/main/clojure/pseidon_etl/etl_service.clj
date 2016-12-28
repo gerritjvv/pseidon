@@ -163,7 +163,6 @@
               ^AtomicLong activity-counter (:activity-counter writer-service)
               exec-f1 (fn [state msg]
                         (when msg
-                          (prn "GOT message " msg)
                           (.incrementAndGet activity-counter)
                           (exec-etl req-metric state msg)))
 
