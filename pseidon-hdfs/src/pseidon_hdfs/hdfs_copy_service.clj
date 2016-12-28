@@ -168,36 +168,40 @@
 (defn- _write-hive-metrics
   "Write hive-errors log"
   [{:keys [writer ^AtomicBoolean closed]} log status partition exception]
-  (if-not (.get closed)
-    (when-not (or (= "hdfs-metrics" log) (= "hive-metrics" log))
-      (let [now (System/currentTimeMillis)
-            k (str "hive-metrics-" (get-local-dt-hr-str now))]
-        (ape/write writer k
-                   (fn [{:keys [^DataOutputStream out]}]
-                     (.write out ^"[B" (as-bytes {"ts" now "log" log "partition" partition "status" status "exception" (str exception)}))
-                     (.write out new-line-bts)))))
-    (info (str "Could not write hive metrics due to shutdown and writers already shutdown topic " log))))
+  ;(if-not (.get closed)
+  ;  (when-not (or (= "hdfs-metrics" log) (= "hive-metrics" log))
+  ;    (let [now (System/currentTimeMillis)
+  ;          k (str "hive-metrics-" (get-local-dt-hr-str now))]
+  ;      (ape/write writer k
+  ;                 (fn [{:keys [^DataOutputStream out]}]
+  ;                   (.write out ^"[B" (as-bytes {"ts" now "log" log "partition" partition "status" status "exception" (str exception)}))
+  ;                   (.write out new-line-bts)))))
+  ;  (info (str "Could not write hive metrics due to shutdown and writers already shutdown topic " log)))
+  ;
+  )
 
 (defn _write-copy-metrics
   "Write the metrics to disk using the key hdfs-metrics, not that hdfs-metrics are not written for the topic hdfs-metrics"
   [{:keys [writer ^AtomicBoolean closed]} topic ^String remote-file size status]
-  (when (and writer closed)
-    (if-not (.get closed)
-      (when-not (= "hdfs-metrics" topic)
-        (let [^File file (io/file remote-file)
-              now (System/currentTimeMillis)
-              k (str "hdfs-metrics-" (get-local-dt-hr-str now))]
-          (ape/write writer k
-                     (fn [{:keys [^DataOutputStream out]}]
-                       (.write out ^"[B" (as-bytes {"hdfs_push_ts"     now
-                                                    "log_name"         topic
-                                                    "remote_file_name" (.getName file)
-                                                    "hdfs_dir"         (.getParent file)
-                                                    "host"             host-name
-                                                    "file_size"        size
-                                                    "status"           status}))
-                       (.write out new-line-bts)))))
-      (info (str "Could not write copy metrics due to shutdown and writers already shutdown topic " topic)))))
+  ;(when (and writer closed)
+  ;  (if-not (.get closed)
+  ;    (when-not (= "hdfs-metrics" topic)
+  ;      (let [^File file (io/file remote-file)
+  ;            now (System/currentTimeMillis)
+  ;            k (str "hdfs-metrics-" (get-local-dt-hr-str now))]
+  ;        (ape/write writer k
+  ;                   (fn [{:keys [^DataOutputStream out]}]
+  ;                     (.write out ^"[B" (as-bytes {"hdfs_push_ts"     now
+  ;                                                  "log_name"         topic
+  ;                                                  "remote_file_name" (.getName file)
+  ;                                                  "hdfs_dir"         (.getParent file)
+  ;                                                  "host"             host-name
+  ;                                                  "file_size"        size
+  ;                                                  "status"           status}))
+  ;                     (.write out new-line-bts)))))
+  ;    (info (str "Could not write copy metrics due to shutdown and writers already shutdown topic " topic))))
+  ;
+  )
 
 
 (defn shutdown-no-metrics? [closed base-dir]
@@ -312,7 +316,7 @@
 
         actionRunner (if (:secure conf) (fn [f]
                                           (let [^UserGroupInformation g (UserGroupInformation/getLoginUser)
-                                                ^UserGroupInformation g2 (get state :proxy g)]
+                                                ^UserGroupInformation g2 (if-let [p (get state :proxy)] p g)]
                                             (.checkTGTAndReloginFromKeytab g)
 
                                             (.doAs g2 (reify PrivilegedAction
@@ -331,7 +335,7 @@
     (actionRunner (fn []
                     (create-dir-if-not-exist
                       fs remote-parent-path
-                      :on-create #(when (and file-ok hive_url)
+                      :on-create #(when (and file-ok hive_url (StringUtils/isNotEmpty (str hive_url)))
                                     (info "add-hive-partition [start]")
                                     (try
                                       (hive/with-hive-conn hive-ctx
