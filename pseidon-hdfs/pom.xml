@@ -17,6 +17,7 @@
       <rpm.prop.filemode>775</rpm.prop.filemode>
       <rpm.prop.username>pseidon</rpm.prop.username>
       <rpm.prop.groupname>pseidon</rpm.prop.groupname>
+      <cdh.version>5.7.0</cdh.version>
     </properties>
 
     <build>
@@ -70,6 +71,26 @@
                         </testResource>
                     </testResources>
                 </configuration>
+            </plugin>
+
+            <plugin>
+                <!-- VERY IMPORTANT, WE MUST MERGE META-INF/services for HDFS Kerberos to work -->
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-shade-plugin</artifactId>
+                <version>2.4.3</version>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>shade</goal>
+                        </goals>
+                        <configuration>
+                            <transformers>
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
+                            </transformers>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
 
             <plugin>
@@ -478,7 +499,7 @@
         <dependency>
             <groupId>org.apache.hive</groupId>
             <artifactId>hive-jdbc</artifactId>
-            <version>1.1.0-cdh5.7.0</version>
+            <version>1.1.0-cdh${cdh.version}</version>
             <exclusions>
                 <exclusion>
                     <groupId>org.apache.hive</groupId>
@@ -489,7 +510,7 @@
         <dependency>
             <groupId>org.apache.hive</groupId>
             <artifactId>hive-exec</artifactId>
-            <version>1.1.0-cdh5.7.0</version>
+            <version>1.1.0-cdh${cdh.version}</version>
         </dependency>
         <dependency>
             <groupId>org.iq80.snappy</groupId>
@@ -574,7 +595,7 @@
         <dependency>
             <groupId>org.apache.hadoop</groupId>
             <artifactId>hadoop-client</artifactId>
-            <version>2.6.0-mr1-cdh5.7.0</version>
+            <version>2.6.0-mr1-cdh${cdh.version}</version>
             <exclusions>
                 <exclusion>
                     <groupId>hsqldb</groupId>
@@ -585,7 +606,7 @@
         <dependency>
             <groupId>org.apache.hadoop</groupId>
             <artifactId>hadoop-minicluster</artifactId>
-            <version>2.6.0-mr1-cdh5.7.0</version>
+            <version>2.6.0-mr1-cdh${cdh.version}</version>
             <exclusions>
                 <exclusion>
                     <groupId>org.glassfish</groupId>
@@ -601,7 +622,7 @@
         <dependency>
             <groupId>org.apache.hadoop</groupId>
             <artifactId>hadoop-test</artifactId>
-            <version>2.6.0-mr1-cdh5.7.0</version>
+            <version>2.6.0-mr1-cdh${cdh.version}</version>
             <exclusions>
                 <exclusion>
                     <groupId>hsqldb</groupId>
@@ -613,7 +634,7 @@
         <dependency>
             <groupId>org.apache.hadoop</groupId>
             <artifactId>hadoop-tools</artifactId>
-            <version>2.6.0-mr1-cdh5.7.0</version>
+            <version>2.6.0-mr1-cdh${cdh.version}</version>
             <scope>provided</scope>
         </dependency>
         <dependency>

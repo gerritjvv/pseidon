@@ -15,7 +15,8 @@
            (java.util.concurrent.atomic AtomicBoolean)
            (java.net InetAddress)
            (java.security PrivilegedAction)
-           (org.apache.hadoop.security UserGroupInformation))
+           (org.apache.hadoop.security UserGroupInformation SecurityUtil SecurityInfo)
+           (java.util ServiceLoader))
   (:require
     [pseidon-hdfs.lifecycle :as life-cycle]
     [pseidon-hdfs.util :refer :all]
@@ -379,7 +380,7 @@
 
 (defn copy-files
   "fs-f  (fs-f) -> FileSystem"
-  [conf copy-thread-exec hive-ctx kafka-partition-conf-cache fs-f state dir metrics]
+  [conf user-info copy-thread-exec hive-ctx kafka-partition-conf-cache fs-f state dir metrics]
   {:pre [copy-thread-exec kafka-partition-conf-cache (fn? fs-f) state dir (:app-status state)]}
   (let [files (gz-file-seq conf (io/file dir))]
     (when (pos? (count files))
@@ -395,7 +396,13 @@
               (fn [f]
 
                 (when (and (local-path-exists? f) (not (.contains ^String (str f) "/tmp/copying")))
-                  (copy-f-coll conf (:app-status state) hive-ctx kafka-partition-conf-cache (fs-f) state f metrics)))
+                  (let [copy-fn #(copy-f-coll conf (:app-status state) hive-ctx kafka-partition-conf-cache (fs-f) state f metrics)]
+
+                    (if user-info
+                      (.doAs ^UserGroupInformation user-info (reify PrivilegedAction
+                                                               (run [_]
+                                                                 (copy-fn))))
+                      (copy-fn)))))
               files)))
 
 (defn copy-metrics-files [component]
@@ -409,8 +416,9 @@
                 hive-ctx]} (:hdfs-copy-service component)
 
         state {:writer writer :closed closed :app-status app-status :base-dir base-dir}]
-    (doseq [file (any-metrics-gz-file-seq base-dir)]
-      (copy-f-coll {} app-status hive-ctx kafka-partition-conf-cache (fs-f) state file metrics))))
+    ;(doseq [file (any-metrics-gz-file-seq base-dir)]
+    ;  (copy-f-coll {} nil app-status hive-ctx kafka-partition-conf-cache (fs-f) state file metrics))
+    ))
 
 
 
@@ -424,11 +432,12 @@
   (.get ^AtomicBoolean closed))
 
 
-(defn copy-files-runner [conf copy-thread-exec app-status hive-ctx kafka-partition-conf-cache fs-f writer closed base-dir metrics]
+(defn copy-files-runner [conf user-info copy-thread-exec app-status hive-ctx kafka-partition-conf-cache fs-f writer closed base-dir metrics]
   (try
     (when-not (shutdown-no-metrics? closed base-dir)
       (copy-files
         conf
+        user-info
         copy-thread-exec
         hive-ctx
         kafka-partition-conf-cache
@@ -479,6 +488,18 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;; Components
 
+(defonce SECURITY-LOADERS [
+                           ;org.apache.hadoop.yarn.server.RMNMSecurityInfoClass
+
+                           org.apache.hadoop.security.AnnotatedSecurityInfo ;; Required for Kerberos Authentication
+
+                           ;org.apache.hadoop.yarn.security.client.ClientRMSecurityInfo
+                           ;org.apache.hadoop.yarn.security.client.ClientTimelineSecurityInfo
+                           ;org.apache.hadoop.yarn.security.ContainerManagerSecurityInfo
+                           ;org.apache.hadoop.yarn.security.SchedulerSecurityInfo
+                           ;org.apache.hadoop.yarn.security.admin.AdminSecurityInfo
+                           ])
+
 ;depends on conf => configuretation map, db => db-service component
 (defrecord HdfsCopyService [conf app-status db monitor-service]
   component/Lifecycle
@@ -510,17 +531,27 @@
             kafka-partition-conf-cache (binding [fun-cache/*executor* cache-exec]
                                          (fun-cache/create-loading-cache (partial load-kafka-partition-config db) :refresh-after-write kafka-partition-cache-refresh))
 
-            user-info (when (:secure conf)
-                        ;;; some default settings for kerberos
-                        (.set hdfs-conf "hadoop.security.authentication" "kerberos")
+            _  (do
+                 (SecurityUtil/setSecurityInfoProviders (into-array SecurityInfo (concat (ServiceLoader/load SecurityInfo) (mapv #(.newInstance %) SECURITY-LOADERS)))))
 
-                        (UserGroupInformation/setConfiguration hdfs-conf)
-                        (UserGroupInformation/loginUserFromKeytab (str (:secure-user conf)) (str (:secure-keytab conf)))
-                        (UserGroupInformation/getLoginUser))
+            user-info-fn #(when (:secure conf)
+                            ;;; some default settings for kerberos
+                            (.set hdfs-conf "hadoop.security.authentication" "kerberos")
 
-            thread-local-fs (thread-local #(FileSystem/get hdfs-conf))
-            fs-f #(thread-local-get thread-local-fs)
+                            (UserGroupInformation/setConfiguration hdfs-conf)
+                            (UserGroupInformation/loginUserFromKeytab (str (:secure-user conf)) (str (:secure-keytab conf)))
+                            (UserGroupInformation/getLoginUser))
+
+            user-info (user-info-fn)
+
+            thread-local-fs (thread-local (fn []
+                                            (user-info-fn)
+                                            (FileSystem/get hdfs-conf)))
+
+            fs-f            #(thread-local-get thread-local-fs)
             ]
+
+
 
         ;;check that the local-dir exists
         (validate-base-dir component base-dir)
@@ -551,6 +582,7 @@
                                                                            (get conf :hdfs-copy-freq 1000)
                                                                            #(copy-files-runner
                                                                               conf
+                                                                              user-info
                                                                               copy-thread-exec
                                                                               app-status
                                                                               hive-ctx
