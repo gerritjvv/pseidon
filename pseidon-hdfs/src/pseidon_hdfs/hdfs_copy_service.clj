@@ -31,7 +31,7 @@
     [fun-utils.cache :as fun-cache]
     [fun-utils.core :refer [fixdelay fixdelay-thread stop-fixdelay]]
     [clj-time.format :as time-f]
-    [clojure.tools.logging :refer [info error debug]]
+    [clojure.tools.logging :refer [info error debug warn]]
     [clojure.java.io :as io]
     [clojure.string :as string]
     [com.stuartsierra.component :as component]))
@@ -314,16 +314,7 @@
         ^String remote-parent-path (.getParent (io/file remote-file))
         ^String temp-file (create-temp-file remote-file)
 
-        actionRunner (if (:secure conf) (fn [f]
-                                          (let [^UserGroupInformation g (UserGroupInformation/getLoginUser)
-                                                ^UserGroupInformation g2 (if-let [p (get state :proxy)] p g)]
-                                            (.checkTGTAndReloginFromKeytab g)
-
-                                            (.doAs g2 (reify PrivilegedAction
-                                                        (run [_]
-                                                          (f))))))
-                                        (fn [f]
-                                          (f)))
+        actionRunner (fn [f] (f))
         ]
 
     (if file-ok
@@ -395,6 +386,11 @@
       (info "Copy files " (count files))
       (info "Copy thread-exec: " copy-thread-exec))
 
+    ;;;ensure relogin when tgt is about to expire or has expired
+    (when (:secure conf)
+      (when-let [^UserGroupInformation ugi (UserGroupInformation/getLoginUser)]
+        (.checkTGTAndReloginFromKeytab ugi)))
+
     (cp/prun! copy-thread-exec
               (fn [f]
 
@@ -428,7 +424,7 @@
   (.get ^AtomicBoolean closed))
 
 
-(defn copy-files-runner [conf proxy copy-thread-exec app-status hive-ctx kafka-partition-conf-cache fs-f writer closed base-dir metrics]
+(defn copy-files-runner [conf copy-thread-exec app-status hive-ctx kafka-partition-conf-cache fs-f writer closed base-dir metrics]
   (try
     (when-not (shutdown-no-metrics? closed base-dir)
       (copy-files
@@ -437,7 +433,7 @@
         hive-ctx
         kafka-partition-conf-cache
         fs-f
-        (assoc {} :writer writer :closed closed :app-status app-status :base-dir base-dir :proxy proxy)
+        (assoc {} :writer writer :closed closed :app-status app-status :base-dir base-dir)
         base-dir
         metrics))
     (catch Exception e
@@ -491,8 +487,7 @@
       component
       (let [;;;FileSystem is not thread safe, we need to create a new instance
             ;;;from the config source for every thread
-            thread-local-fs (thread-local #(FileSystem/get (map->hdfs-conf (get-in component [:conf :hdfs-conf]))))
-            fs-f #(thread-local-get thread-local-fs)
+            ^Configuration hdfs-conf (map->hdfs-conf (get-in component [:conf :hdfs-conf]))
 
             base-dir (get-in component [:conf :local-dir])
 
@@ -516,11 +511,16 @@
                                          (fun-cache/create-loading-cache (partial load-kafka-partition-config db) :refresh-after-write kafka-partition-cache-refresh))
 
             user-info (when (:secure conf)
-                        (UserGroupInformation/loginUserFromKeytab (str (:secure-user conf)) (str (:secure-keytab conf))))
+                        ;;; some default settings for kerberos
+                        (.set hdfs-conf "hadoop.security.authentication" "kerberos")
 
-            ;;if a proxy user is specified, this user will be impersonated by the user-info
-            proxy-info (when (:proxy-user conf)
-                         (UserGroupInformation/createProxyUser (:proxy-user conf) (UserGroupInformation/getLoginUser)))]
+                        (UserGroupInformation/setConfiguration hdfs-conf)
+                        (UserGroupInformation/loginUserFromKeytab (str (:secure-user conf)) (str (:secure-keytab conf)))
+                        (UserGroupInformation/getLoginUser))
+
+            thread-local-fs (thread-local #(FileSystem/get hdfs-conf))
+            fs-f #(thread-local-get thread-local-fs)
+            ]
 
         ;;check that the local-dir exists
         (validate-base-dir component base-dir)
@@ -551,7 +551,6 @@
                                                                            (get conf :hdfs-copy-freq 1000)
                                                                            #(copy-files-runner
                                                                               conf
-                                                                              proxy-info
                                                                               copy-thread-exec
                                                                               app-status
                                                                               hive-ctx

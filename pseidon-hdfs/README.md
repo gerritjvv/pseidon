@@ -12,7 +12,7 @@ Create a mysql database, user and the following table in the database:
 
 ```sql
 CREATE TABLE `pseidon_logs` (
-  `log` varchar(100) NOT NULL
+  `log` varchar(100) NOT NULL,
   `format` varchar(200) DEFAULT NULL,        -- TXT:{"ts": 0, "sep": "byte1"}
   `output_format` varchar(200) DEFAULT NULL, -- TXT
   `base_partition` varchar(200) DEFAULT NULL,
@@ -24,7 +24,7 @@ CREATE TABLE `pseidon_logs` (
   `quarantine` varchar(200) DEFAULT "/tmp/pseidon-quarantine",
   `dateformat` varchar(200) DEFAULT "datehour",
   `log_group` varchar(100) DEFAULT 'default',
-  `enabled`  `enabled` tinyint(1) DEFAULT '1'
+  `enabled`  tinyint(1) DEFAULT '1',
   PRIMARY KEY (`log`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1
 ```
@@ -111,23 +111,15 @@ of that used for hadoop and hive in production, refer to the ```pom.xml``` file.
 
 # Kerberos
 
-Add the following to ```/etc/sysconfig/pseidon-hdfs```
-
-```
--Djava.security.auth.login.config=/home/hdfs-user/jaas.conf
--Djava.security.krb5.conf=/etc/krb5.conf
--Djavax.security.auth.useSubjectCredsOnly=false
-```
+For reference see: http://henning.kropponline.de/2016/02/14/a-secure-hdfs-client-example/
 
 Change ```/opt/pseidon-hdfs/conf/pseidon.edn``` to contain:
 
-Remember to use the "webhdfs" protocol
 
 ```
-:hdfs-conf {"fs.default.name" "webhdfs://<namenode>:50070"
-              "fs.defaultFS" "webhdfs://<namenode>:50070"
+:hdfs-conf {"fs.default.name" "hdfs://<namenode>:50070"
+              "fs.defaultFS" "hdfs://<namenode>:50070"
               "fs.hdfs.impl" "org.apache.hadoop.hdfs.DistributedFileSystem"
-              "fs.webhdfs.impl" "org.apache.hadoop.hdfs.web.WebHdfsFileSystem"
               "hadoop.security.authentication", "kerberos"
               }
 ```
