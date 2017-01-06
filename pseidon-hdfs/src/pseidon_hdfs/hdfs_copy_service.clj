@@ -14,9 +14,14 @@
            (org.apache.commons.lang StringUtils)
            (java.util.concurrent.atomic AtomicBoolean)
            (java.net InetAddress)
-           (java.security PrivilegedAction)
+           (java.security PrivilegedAction PrivilegedExceptionAction)
            (org.apache.hadoop.security UserGroupInformation SecurityUtil SecurityInfo)
-           (java.util ServiceLoader))
+           (java.util ServiceLoader)
+           (com.google.common.base Throwables)
+           (sun.security.jgss GSSExceptionImpl)
+           (org.ietf.jgss GSSException)
+           (javax.security.sasl SaslException)
+           (java.lang.reflect Method))
   (:require
     [pseidon-hdfs.lifecycle :as life-cycle]
     [pseidon-hdfs.util :refer :all]
@@ -313,10 +318,7 @@
 
         ^String remote-file (create-remote-file-name base-dir date_format log_partition file)
         ^String remote-parent-path (.getParent (io/file remote-file))
-        ^String temp-file (create-temp-file remote-file)
-
-        actionRunner (fn [f] (f))
-        ]
+        ^String temp-file (create-temp-file remote-file)]
 
     (if file-ok
       (info "copying file " file " via " temp-file " to " remote-file)
@@ -324,43 +326,42 @@
 
     (update-file-upload-meter metrics file)
 
-    (actionRunner (fn []
-                    (create-dir-if-not-exist
-                      fs remote-parent-path
-                      :on-create #(when (and file-ok hive_url (StringUtils/isNotEmpty (str hive_url)))
-                                    (info "add-hive-partition [start]")
-                                    (try
-                                      (hive/with-hive-conn hive-ctx
-                                                           hive_url
-                                                           hive_user
-                                                           hive_password
-                                                           (fn [hive-conn]
-                                                             (add-hive-partition state
-                                                                                 hive-conn
-                                                                                 hive_db_name
-                                                                                 hive_table_name
-                                                                                 file
-                                                                                 topic)))
-                                      (catch Exception e
-                                        (when (not (app-shutdown? (:app-status state)))
-                                          (error e (str "Error adding partition for " {:topic        topic
-                                                                                       :file         file
-                                                                                       :hive-url     hive_url
-                                                                                       :hive-user    hive_user
-                                                                                       :hive-table   hive_table_name
-                                                                                       :hive-db-name hive_db_name})))))
+    (create-dir-if-not-exist
+      fs remote-parent-path
+      :on-create #(when (and file-ok hive_url (StringUtils/isNotEmpty (str hive_url)))
+                    (info "add-hive-partition [start]")
+                    (try
+                      (hive/with-hive-conn hive-ctx
+                                           hive_url
+                                           hive_user
+                                           hive_password
+                                           (fn [hive-conn]
+                                             (add-hive-partition state
+                                                                 hive-conn
+                                                                 hive_db_name
+                                                                 hive_table_name
+                                                                 file
+                                                                 topic)))
+                      (catch Exception e
+                        (when (not (app-shutdown? (:app-status state)))
+                          (error e (str "Error adding partition for " {:topic        topic
+                                                                       :file         file
+                                                                       :hive-url     hive_url
+                                                                       :hive-user    hive_user
+                                                                       :hive-table   hive_table_name
+                                                                       :hive-db-name hive_db_name})))))
 
-                                    (info "add-hive-partition [end]")))
+                    (info "add-hive-partition [end]")))
 
 
-                    (hdfs-copy-file fs file temp-file)
+    (hdfs-copy-file fs file temp-file)
 
-                    (if (hdfs-rename fs temp-file remote-file)
-                      (delete-local-resources state topic remote-file file size)
-                      (when (hdfs-path-exists? fs remote-file) ;; if we couldnt rename
-                        (hdfs-delete fs remote-file)        ;; delete the remote file, and try the rename again
-                        (when (hdfs-rename fs temp-file remote-file) ;; then delete the local resources again
-                          (delete-local-resources state topic remote-file file size))))))))
+    (if (hdfs-rename fs temp-file remote-file)
+      (delete-local-resources state topic remote-file file size)
+      (when (hdfs-path-exists? fs remote-file) ;; if we couldnt rename
+        (hdfs-delete fs remote-file)        ;; delete the remote file, and try the rename again
+        (when (hdfs-rename fs temp-file remote-file) ;; then delete the local resources again
+          (delete-local-resources state topic remote-file file size))))))
 
 
 (defn- copy-f-coll [conf app-status hive-ctx kafka-partition-conf-cache fs state file metrics]
@@ -376,21 +377,55 @@
                                     {:file file :file-ok (file-ok? file)}
                                     metrics))
     (catch Exception e (when-not (shutdown? (:closed state))
-                         (error e e)))))
+                         (throw e)))))
+
+
+(defn expired-ticket-exception? [^Throwable e]
+  (let [cause (Throwables/getRootCause e)
+        ^String s (str (.getMessage cause) (str cause))]
+    (or
+      (instance? GSSException cause)
+      (instance? SaslException cause)
+      (.contains s "No valid")
+      (.contains s "GSS")
+      (.contains s "ticket"))))
+
+(defn renew-for-tests
+  "This is not really for testing but sets the renew for tests on the UserGroupInformation
+   which fixes the renewal issues seen during testing"
+  [v]
+  (let [^Method m (first (filter (fn [^Method m] (= (.getName m) "setShouldRenewImmediatelyForTests")) (.getDeclaredMethods UserGroupInformation)))]
+    (.setAccessible m true)
+    (.invoke m nil (into-array [true]))))
+
+(defn run-secure!
+  "Run with kerberos"
+  [user-info-ref user-info-fn copy-fn & {:keys [call-i] :or {call-i 0}}]
+  (try
+    (let [^UserGroupInformation user-info @user-info-ref]
+
+      (.checkTGTAndReloginFromKeytab user-info)
+      (.doAs user-info (reify PrivilegedExceptionAction
+                         (run [_]
+                           (copy-fn)))))
+    (catch Exception e (do
+                         ;;we need to set renew immediately to true, renew doesn't work
+                         ;;sometimes without it
+                         (renew-for-tests true)
+                         (.checkTGTAndReloginFromKeytab @user-info-ref)
+
+                         (renew-for-tests false)
+
+                         (throw e)))))
 
 (defn copy-files
   "fs-f  (fs-f) -> FileSystem"
-  [conf user-info copy-thread-exec hive-ctx kafka-partition-conf-cache fs-f state dir metrics]
+  [conf {:keys [user-info-ref user-info-fn]} copy-thread-exec hive-ctx kafka-partition-conf-cache fs-f state dir metrics]
   {:pre [copy-thread-exec kafka-partition-conf-cache (fn? fs-f) state dir (:app-status state)]}
   (let [files (gz-file-seq conf (io/file dir))]
     (when (pos? (count files))
       (info "Copy files " (count files))
       (info "Copy thread-exec: " copy-thread-exec))
-
-    ;;;ensure relogin when tgt is about to expire or has expired
-    (when (:secure conf)
-      (when-let [^UserGroupInformation ugi (UserGroupInformation/getLoginUser)]
-        (.checkTGTAndReloginFromKeytab ugi)))
 
     (cp/prun! copy-thread-exec
               (fn [f]
@@ -398,10 +433,10 @@
                 (when (and (local-path-exists? f) (not (.contains ^String (str f) "/tmp/copying")))
                   (let [copy-fn #(copy-f-coll conf (:app-status state) hive-ctx kafka-partition-conf-cache (fs-f) state f metrics)]
 
-                    (if user-info
-                      (.doAs ^UserGroupInformation user-info (reify PrivilegedAction
-                                                               (run [_]
-                                                                 (copy-fn))))
+
+                    (info ">> copy from user user!!!!!!!!!!!!!!!!!!!!!!: " )
+                    (if @user-info-ref
+                      (run-secure! user-info-ref user-info-fn copy-fn)
                       (copy-fn)))))
               files)))
 
@@ -432,12 +467,12 @@
   (.get ^AtomicBoolean closed))
 
 
-(defn copy-files-runner [conf user-info copy-thread-exec app-status hive-ctx kafka-partition-conf-cache fs-f writer closed base-dir metrics]
+(defn copy-files-runner [conf user-info-ctx copy-thread-exec app-status hive-ctx kafka-partition-conf-cache fs-f writer closed base-dir metrics]
   (try
     (when-not (shutdown-no-metrics? closed base-dir)
       (copy-files
         conf
-        user-info
+        user-info-ctx
         copy-thread-exec
         hive-ctx
         kafka-partition-conf-cache
@@ -542,11 +577,9 @@
                             (UserGroupInformation/loginUserFromKeytab (str (:secure-user conf)) (str (:secure-keytab conf)))
                             (UserGroupInformation/getLoginUser))
 
-            user-info (user-info-fn)
+            user-info-ctx {:user-info-ref (atom (user-info-fn)) :user-info-fn user-info-fn}
 
-            thread-local-fs (thread-local (fn []
-                                            (user-info-fn)
-                                            (FileSystem/get hdfs-conf)))
+            thread-local-fs (thread-local #(FileSystem/get hdfs-conf))
 
             fs-f            #(thread-local-get thread-local-fs)
             ]
@@ -582,7 +615,7 @@
                                                                            (get conf :hdfs-copy-freq 1000)
                                                                            #(copy-files-runner
                                                                               conf
-                                                                              user-info
+                                                                              user-info-ctx
                                                                               copy-thread-exec
                                                                               app-status
                                                                               hive-ctx
