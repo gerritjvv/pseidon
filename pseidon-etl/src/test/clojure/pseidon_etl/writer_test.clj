@@ -42,8 +42,8 @@
                                               :rollover-timeout 1000
                                               :rollover-abs-timeout 1000})]
 
-          (writer/write-msgs {} writer-ctx (take 1000 (repeatedly #(writer/wrap-msg "test" (formats/->FormatMsg ts (.getBytes "HI") "HI")))))
-          (writer/write-msgs {}  writer-ctx (take 1000 (repeatedly #(writer/wrap-msg "test" (formats/->FormatMsg ts (.getBytes "HI") "HI")))))
+          (writer/write-msgs {} writer-ctx (take 1000 (repeatedly #(writer/wrap-msg "test" (formats/->FormatMsg "txt" ts (.getBytes "HI") "HI")))))
+          (writer/write-msgs {}  writer-ctx (take 1000 (repeatedly #(writer/wrap-msg "test" (formats/->FormatMsg "txt" ts (.getBytes "HI") "HI")))))
           (Thread/sleep 1000)
           (writer/close-writer writer-ctx)
 

@@ -4,7 +4,7 @@
     [clojure.test :refer :all]
     [com.stuartsierra.component :as component]
     [clojure.tools.logging :refer [info error]]
-    ;[pseidon-etl.writer :refer [writer-service]]
+    [pseidon-etl.writer :refer [writer-service]]
     [kafka-clj.consumer.node :refer [create-kafka-node-service]]
     [pseidon-etl.db-service :refer :all]
     [pseidon-etl.test-utils :refer [create-db-tables startup-resources shutdown-resources]]
