@@ -86,7 +86,9 @@ of that used for hadoop and hive in production, refer to the ```pom.xml``` file.
             } </td>
 
  <td>hdfs configuration that points the hadoop client to the hdfs cluster</td></tr>
- <r><td>:hdfs-path-perms</td><td>Permissions to apply to directories and files uploaded to hdfs default is 0777</td></tr>
+ <tr><td>:hdfs-dir-perms</td><td>Permissions to apply to directories uploaded to hdfs default is 0777</td></tr>
+ <tr><td>:hdfs-file-perms</td><td>Permissions to apply to files uploaded to hdfs default is 0777</td></tr>
+
  <tr><td>:local-dir</td><td>"/tmp"</td><td>The directory from which the data should be loaded from</td></tr>
  <tr><td>:kafka-partition-cache-refresh</td><td>Time in milliseconds that the partition cache refresh will happen, default 30 000</td></tr>
  <tr><td>:copy-threads</td><td>The number of threads to use for file copying, default 8</td></tr>

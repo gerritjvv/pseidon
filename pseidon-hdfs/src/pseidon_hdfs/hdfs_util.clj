@@ -42,13 +42,16 @@
   (.exists (io/file (str path))))
 
 
-(defn ^FsPermission get-permissions [{:keys [hdfs-path-perms] :or {hdfs-path-perms 0777}}]
-  (FsPermission. (short hdfs-path-perms)))
+(defn ^FsPermission get-dir-permissions [{:keys [hdfs-dir-perms] :or {hdfs-dir-perms 0777}}]
+  (FsPermission. (str hdfs-dir-perms)))
+
+(defn ^FsPermission get-file-permissions [{:keys [hdfs-file-perms] :or {hdfs-file-perms 0777}}]
+  (FsPermission. (str hdfs-file-perms)))
 
 (defn hdfs-mkdirs
   "Call mkdir -p on the parent dirs of the remote-file"
   [conf ^FileSystem fs dir]
-  (.mkdirs fs (hdfs-path dir) (get-permissions conf)))
+  (.mkdirs fs (hdfs-path dir) (get-dir-permissions conf)))
 
 (defn create-dir-if-not-exist
   "If the path does not exist, create it and call on-create"
@@ -66,7 +69,7 @@
 
 (defn hdfs-set-perms [conf ^FileSystem fs path]
   (debug "setting perms " (get-permissions conf) " on " path)
-  (.setPermission fs (hdfs-path path) (get-permissions conf)))
+  (.setPermission fs (hdfs-path path) (get-file-permissions conf)))
 
 (defn hdfs-rename
   "Rename the file form into to"
