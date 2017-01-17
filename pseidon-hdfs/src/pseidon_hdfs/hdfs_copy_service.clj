@@ -327,7 +327,7 @@
     (update-file-upload-meter metrics file)
 
     (create-dir-if-not-exist
-      fs remote-parent-path
+      conf fs remote-parent-path
       :on-create #(when (and file-ok hive_url (StringUtils/isNotEmpty (str hive_url)))
                     (info "add-hive-partition [start]")
                     (try
@@ -354,10 +354,14 @@
                     (info "add-hive-partition [end]")))
 
 
-    (hdfs-copy-file fs file temp-file)
+    (hdfs-copy-file conf fs file temp-file)
+    (hdfs-set-perms conf fs temp-file)
 
     (if (hdfs-rename fs temp-file remote-file)
-      (delete-local-resources state topic remote-file file size)
+      (do
+        ;;ensure rename didn't change permissions
+        (hdfs-set-perms conf fs remote-file)
+        (delete-local-resources state topic remote-file file size))
       (when (hdfs-path-exists? fs remote-file) ;; if we couldnt rename
         (hdfs-delete fs remote-file)        ;; delete the remote file, and try the rename again
         (when (hdfs-rename fs temp-file remote-file) ;; then delete the local resources again
