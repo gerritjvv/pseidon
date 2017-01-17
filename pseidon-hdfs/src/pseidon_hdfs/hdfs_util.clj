@@ -51,6 +51,7 @@
 (defn hdfs-mkdirs
   "Call mkdir -p on the parent dirs of the remote-file"
   [conf ^FileSystem fs dir]
+  (debug "create directory " dir " with permissions " (get-dir-permissions conf))
   (.mkdirs fs (hdfs-path dir) (get-dir-permissions conf)))
 
 (defn create-dir-if-not-exist
@@ -68,7 +69,7 @@
   (.copyFromLocalFile fs false (hdfs-path (.getAbsolutePath (io/file src))) (hdfs-path dest)))
 
 (defn hdfs-set-perms [conf ^FileSystem fs path]
-  (debug "setting perms " (get-permissions conf) " on " path)
+  (debug "setting perms " (get-file-permissions conf) " on " path)
   (.setPermission fs (hdfs-path path) (get-file-permissions conf)))
 
 (defn hdfs-rename
