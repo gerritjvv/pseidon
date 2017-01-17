@@ -4,8 +4,9 @@
   (:require [clojure.java.io :as io]
             [clojure.tools.logging :refer [info]])
   (:import (org.apache.hadoop.fs Path FileSystem)
-           (java.io File)
-           (org.apache.commons.lang StringUtils)))
+           (java.io File FilePermission)
+           (org.apache.commons.lang StringUtils)
+           (org.apache.hadoop.fs.permission FsPermission)))
 
 
 (defn add-slash [^String path]
@@ -40,10 +41,17 @@
   [path]
   (.exists (io/file (str path))))
 
+
+(defn ^FsPermission get-permissions [^FileSystem fs]
+  (let [^FsPermission default-permission (.applyUMask (FsPermission/getFileDefault) (FsPermission/getUMask (.getConf fs)))]
+    (FsPermission. (.getUserAction default-permission)
+                   (.getUserAction default-permission)
+                   (.getOtherAction default-permission))))
+
 (defn hdfs-mkdirs
   "Call mkdir -p on the parent dirs of the remote-file"
   [^FileSystem fs dir]
-  (.mkdirs fs (hdfs-path dir)))
+  (.mkdirs fs (hdfs-path dir) (get-permissions fs)))
 
 (defn create-dir-if-not-exist
   "If the path does not exist, create it and call on-create"
