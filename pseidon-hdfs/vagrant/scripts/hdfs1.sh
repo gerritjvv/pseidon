@@ -39,7 +39,7 @@ function configure_cdh_hdfs {
      sudo cat "${VAGRANT_HDFS_CONF_DIR}/core-site.xml" > "${CLUSTER_DIR}/core-site.xml"
      sudo cat "${VAGRANT_HDFS_CONF_DIR}/hdfs-site.xml" > "${CLUSTER_DIR}/hdfs-site.xml"
 
-     sudo mv /vagrant/vagrant/keytabs/hdfs1/hdfs.keytab "${CLUSTER_DIR}/"
+     sudo cp /vagrant/vagrant/keytabs/hdfs1/hdfs.keytab "${CLUSTER_DIR}/"
      sudo chown hdfs:hadoop "${CLUSTER_DIR}"/hdfs.keytab
      sudo chmod 400 "${CLUSTER_DIR}"/*.keytab
 

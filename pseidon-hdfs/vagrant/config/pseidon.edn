@@ -1,0 +1,36 @@
+{
+
+ ;;;; please fill in the <$var> parts in the configuration below
+ ;;;; Note that pseidon-hdfs is configured from the mysql pseidon_logs table
+ ;
+ ; =========== NON Kerberos HDFS =================================
+ ;:hdfs-conf {"fs.default.name" "hdfs://<namenode>8020"
+ ;            "fs.defaultFS" "hdfs://<namenode>:8020"
+ ;            "fs.hdfs.impl" "org.apache.hadoop.hdfs.DistributedFileSystem"}
+ :local-dir "/var/local/hdfs/data"
+ ;
+ ; =========== Kerberos HDFS ====================================
+ ;
+ :hdfs-conf {"fs.default.name" "hdfs://hdfs1.hdfs-pseidon:8020"
+             "fs.defaultFS" "hdfs://hdfs1.hdfs-pseidon:8020"
+             "fs.hdfs.impl" "org.apache.hadoop.hdfs.DistributedFileSystem"
+             "hadoop.security.authentication", "kerberos"}
+ 
+ ;:repl-port 7113
+ ;:monitor-port 8283
+ ;
+ ;
+ ;;; The mysql connection properties
+ :hdfs-db-host "localhost"  ;;e.g localhost
+ :hdfs-db-name "pseidon"    ;;    mydb
+ :hdfs-db-user "pseidon"  ;;    pseidon
+ :hdfs-db-pwd "pseidon"    ;;    ""
+ ;
+ ;:hdfs-copy-freq 500
+ ;:copy-threads 8
+
+
+ :secure true ;;if true the UserGroupInformation::loginUserFromKeytab is used
+ :secure-keytab "/vagrant/vagrant/keytabs/client1/hdfs.keytab"
+ :secure-user "hdfs/client1.hdfs-pseidon@HDFS-PSEIDON";; e.g cloudera@CLOUDERA.COM
+}

@@ -42,11 +42,18 @@
   (.exists (io/file (str path))))
 
 
-(defn ^FsPermission get-dir-permissions [{:keys [hdfs-dir-perms] :or {hdfs-dir-perms 0777}}]
+(defn ^FsPermission get-dir-permissions [{:keys [hdfs-dir-perms] :or {hdfs-dir-perms "777"}}]
   (FsPermission. (str hdfs-dir-perms)))
 
-(defn ^FsPermission get-file-permissions [{:keys [hdfs-file-perms] :or {hdfs-file-perms 0777}}]
+(defn ^FsPermission get-file-permissions [{:keys [hdfs-file-perms] :or {hdfs-file-perms "777"}}]
   (FsPermission. (str hdfs-file-perms)))
+
+(defn hdfs-set-perms
+  ([conf ^FileSystem fs path]
+    (hdfs-set-perms conf fs path (get-file-permissions conf)))
+  ([conf ^FileSystem fs path ^FsPermission perm]
+   (info "setting perms " perm " on " path)
+   (.setPermission fs (hdfs-path path) perm)))
 
 (defn hdfs-mkdirs
   "Call mkdir -p on the parent dirs of the remote-file"
@@ -54,12 +61,23 @@
   (debug "create directory " dir " with permissions " (get-dir-permissions conf))
   (.mkdirs fs (hdfs-path dir) (get-dir-permissions conf)))
 
+(defn split-paths [path]
+  (sort-by (comp count #(.toString %))
+    (take-while
+      (complement nil?)
+      (iterate #(when % (.getParent ^Path %))
+               (hdfs-path path)))))
+
 (defn create-dir-if-not-exist
   "If the path does not exist, create it and call on-create"
   [conf ^FileSystem fs path & {:keys [on-create]}]
   (when (not (hdfs-path-exists? fs path))
-    (info "creating hdfs dir " path)
-    (hdfs-mkdirs conf fs path)
+
+    (doseq [sub-path (into [] (filter #(not (hdfs-path-exists? fs %)) (split-paths path)))]
+      (info "creating dir: " sub-path)
+      (hdfs-mkdirs conf fs sub-path)
+      (hdfs-set-perms conf fs sub-path (get-dir-permissions conf)))
+
     (info "calling on-create")
     (on-create)))
 
@@ -67,10 +85,6 @@
   "Copy From Local File without delete"
   [conf ^FileSystem fs src dest]
   (.copyFromLocalFile fs false (hdfs-path (.getAbsolutePath (io/file src))) (hdfs-path dest)))
-
-(defn hdfs-set-perms [conf ^FileSystem fs path]
-  (debug "setting perms " (get-file-permissions conf) " on " path)
-  (.setPermission fs (hdfs-path path) (get-file-permissions conf)))
 
 (defn hdfs-rename
   "Rename the file form into to"

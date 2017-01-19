@@ -33,7 +33,7 @@ function configure_cdh_hdfs {
      sudo cat "${VAGRANT_HDFS_CONF_DIR}/core-site.xml" > "${CLUSTER_DIR}/core-site.xml"
      sudo cat "${VAGRANT_HDFS_CONF_DIR}/hdfs-site.xml" > "${CLUSTER_DIR}/hdfs-site.xml"
 
-     sudo mv /vagrant/vagrant/keytabs/client1/hdfs.keytab "${CLUSTER_DIR}/"
+     sudo cp /vagrant/vagrant/keytabs/client1/hdfs.keytab "${CLUSTER_DIR}/"
      sudo chown hdfs:hadoop "${CLUSTER_DIR}"/hdfs.keytab
      sudo chmod 400 "${CLUSTER_DIR}"/*.keytab
 
@@ -45,6 +45,8 @@ function configure_cdh_hdfs {
 
      sudo chown -R hdfs:hdfs "${NAME_DIR}" "${DATA_DIR}"
      sudo chmod 700 "${NAME_DIR}"
+
+     sudo chmod 777 "${DATA_DIR}"
 
 
  else
@@ -92,7 +94,27 @@ EOF
 
 }
 
+function setup_users {
+ sudo groupadd pseidon || true
+
+ sudo useradd -g pseidon pseidon  || true
+
+}
+
+function install_pseidon {
+
+ sudo dpkg -i /vagrant/target/pseidon-hdfs_0.1.0_all.deb
+ sudo cp /vagrant/vagrant/config/pseidon.edn /opt/pseidon-hdfs/conf/
+ sudo chown pseidon:pseidon /vagrant/vagrant/config/pseidon.edn
+
+ echo "To generate test data use " touch  /var/local/hdfs/data/myfile-`date +"%Y-%m-%d-%H"`.`date +"%S"`.gz
+}
+
 configure_cdh_hdfs
 
 install_mvn
 install_setup_db
+
+setup_users
+
+install_pseidon

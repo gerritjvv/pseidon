@@ -11,7 +11,12 @@ function install_cdh_repo {
   CLOUDERA_LIST="/etc/apt/sources.list.d/cloudera.list"
 
   if [ ! -f "${CLOUDERA_LIST}" ]; then
-      sudo wget 'https://archive.cloudera.com/cdh5/ubuntu/precise/amd64/cdh/cloudera.list' -O "${CLOUDERA_LIST}"
+
+      #use for latest cdh
+      #sudo wget 'https://archive.cloudera.com/cdh5/ubuntu/precise/amd64/cdh/cloudera.list' -O "${CLOUDERA_LIST}"
+
+      #use for 5.7.0
+      echo "deb [arch=amd64] https://archive.cloudera.com/cdh5/ubuntu/precise/amd64/cdh precise-cdh5.7.0 contrib" > /etc/apt/sources.list.d/cloudera.list
 
       sudo apt-get update
 
