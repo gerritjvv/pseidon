@@ -42,15 +42,26 @@
   (.exists (io/file (str path))))
 
 
-(defn ^FsPermission get-dir-permissions [{:keys [hdfs-dir-perms] :or {hdfs-dir-perms "777"}}]
-  (FsPermission. (str hdfs-dir-perms)))
+(defn get-default-permissions [^FileSystem fs]
+  (let [^FsPermission default-perm (.applyUMask (FsPermission/getFileDefault) (FsPermission/getUMask (.getConf fs)))
+        ^FsPermission perm (FsPermission. (.getUserAction default-perm)
+                                          (.getUserAction default-perm)
+                                          (.getOtherAction default-perm))]
+    perm))
 
-(defn ^FsPermission get-file-permissions [{:keys [hdfs-file-perms] :or {hdfs-file-perms "777"}}]
-  (FsPermission. (str hdfs-file-perms)))
+(defn ^FsPermission get-dir-permissions [^FileSystem fs {:keys [hdfs-dir-perms]}]
+  (if hdfs-dir-perms
+    (FsPermission. (str hdfs-dir-perms))
+    (get-default-permissions fs)))
+
+(defn ^FsPermission get-file-permissions [^FileSystem fs {:keys [hdfs-file-perms]}]
+  (if hdfs-file-perms
+    (FsPermission. (str hdfs-file-perms))
+    (get-default-permissions fs )))
 
 (defn hdfs-set-perms
   ([conf ^FileSystem fs path]
-    (hdfs-set-perms conf fs path (get-file-permissions conf)))
+    (hdfs-set-perms conf fs path (get-file-permissions fs conf)))
   ([conf ^FileSystem fs path ^FsPermission perm]
    (info "setting perms " perm " on " path)
    (.setPermission fs (hdfs-path path) perm)))
@@ -58,8 +69,8 @@
 (defn hdfs-mkdirs
   "Call mkdir -p on the parent dirs of the remote-file"
   [conf ^FileSystem fs dir]
-  (debug "create directory " dir " with permissions " (get-dir-permissions conf))
-  (.mkdirs fs (hdfs-path dir) (get-dir-permissions conf)))
+  (debug "create directory " dir " with permissions " (get-dir-permissions fs conf))
+  (.mkdirs fs (hdfs-path dir) (get-dir-permissions fs conf)))
 
 (defn split-paths [path]
   (sort-by (comp count #(.toString %))
@@ -76,7 +87,7 @@
     (doseq [sub-path (into [] (filter #(not (hdfs-path-exists? fs %)) (split-paths path)))]
       (info "creating dir: " sub-path)
       (hdfs-mkdirs conf fs sub-path)
-      (hdfs-set-perms conf fs sub-path (get-dir-permissions conf)))
+      (hdfs-set-perms conf fs sub-path (get-dir-permissions fs conf)))
 
     (info "calling on-create")
     (on-create)))
