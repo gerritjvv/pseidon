@@ -4,6 +4,46 @@
 
 <configuration>
     <property>
+        <name>dfs.nameservices</name>
+        <value>pseidon-hdfs</value>
+    </property>
+    <property>
+        <name>dfs.client.failover.proxy.provider.pseidon-hdfs</name>
+        <value>org.apache.hadoop.hdfs.server.namenode.ha.ConfiguredFailoverProxyProvider</value>
+    </property>
+    <property>
+        <name>dfs.ha.namenodes.pseidon-hdfs</name>
+        <value>hdfs1,hdfs2</value>
+    </property>
+    <property>
+        <name>dfs.namenode.rpc-address.pseidon-hdfs.hdfs1</name>
+        <value>hdfs1.hdfs-pseidon:8020</value>
+    </property>
+    <property>
+        <name>dfs.namenode.rpc-address.pseidon-hdfs.hdfs2</name>
+        <value>hdfs2.hdfs-pseidon:8020</value>
+    </property>
+    <property>
+        <name>dfs.namenode.http-address.pseidon-hdfs.hdfs1</name>
+        <value>hdfs1.hdfs-pseidon:50070</value>
+    </property>
+    <property>
+        <name>dfs.namenode.http-address.pseidon-hdfs.hdfs2</name>
+        <value>hdfs2.hdfs-pseidon:50070</value>
+    </property>
+    <property>
+        <name>dfs.namenode.shared.edits.dir</name>
+        <value>file:///vagrant/target/pseidon-hdfs</value>
+    </property>
+    <property>
+        <name>dfs.ha.automatic-failover.enabled</name>
+        <value>false</value>
+    </property>
+    <property>
+        <name>dfs.journalnode.edits.dir</name>
+        <value>/var/local/hdfs/journal</value>
+    </property>
+    <property>
         <name>dfs.namenode.name.dir</name>
         <value>file:///var/local/hdfs/name</value>
     </property>
@@ -34,7 +74,7 @@
     </property>
     <property>
         <name>dfs.namenode.kerberos.principal</name>
-        <value>hdfs/hdfs1.hdfs-pseidon@HDFS-PSEIDON</value>
+        <value>hdfs/${node}.hdfs-pseidon@HDFS-PSEIDON</value>
     </property>
     <property>
         <name>dfs.namenode.kerberos.internal.spnego.principal</name>
@@ -48,11 +88,26 @@
     </property>
     <property>
         <name>dfs.secondary.namenode.kerberos.principal</name>
-        <value>hdfs/hdfs1.hdfs-pseidon@HDFS-PSEIDON</value>
+        <value>hdfs/${node}.hdfs-pseidon@HDFS-PSEIDON</value>
     </property>
     <property>
         <name>dfs.secondary.namenode.kerberos.internal.spnego.principal</name>
-        <value>HTTP/hdfs1.hdfs-pseidon@HDFS-PSEIDON</value>
+        <value>HTTP/${node}.hdfs-pseidon@HDFS-PSEIDON</value>
+    </property>
+
+    <property>
+        <name>dfs.journalnode.keytab.file</name>
+        <value>/etc/hadoop/conf/hdfs.keytab</value>
+    </property>
+
+    <property>
+        <name>dfs.journalnode.kerberos.principal</name>
+        <value>hdfs/${node}.hdfs-pseidon@HDFS-PSEIDON</value>
+    </property>
+
+    <property>
+        <name>dfs.journalnode.kerberos.internal.spnego.principal</name>
+        <value>HTTP/${node}.hdfs-pseidon@HDFS-PSEIDON</value>
     </property>
 
     <!-- DataNode security config -->
@@ -74,13 +129,13 @@
     </property>
     <property>
         <name>dfs.datanode.kerberos.principal</name>
-        <value>hdfs/hdfs1.hdfs-pseidon@HDFS-PSEIDON</value>
+        <value>hdfs/${node}.hdfs-pseidon@HDFS-PSEIDON</value>
     </property>
 
     <!-- Web Authentication config -->
     <property>
         <name>dfs.web.authentication.kerberos.principal</name>
-        <value>HTTP/hdfs1.hdfs-pseidon@HDFS-PSEIDON</value>
+        <value>HTTP/${node}.hdfs-pseidon@HDFS-PSEIDON</value>
     </property>
 
     <property>

@@ -20,15 +20,19 @@
 <configuration>
     <property>
         <name>fs.defaultFS</name>
-        <value>hdfs://hdfs1.hdfs-pseidon:8020</value>
+        <value>hdfs://pseidon-hdfs:8020</value>
     </property>
     <property>
-        <name>hadoop.security.authentication</name>
-        <value>kerberos</value> <!-- A value of "simple" would disable security. -->
+        <name>dfs.journalnode.edits.dir</name>
+        <value>/var/local/hdfs/journal</value>
     </property>
+    <!--<property>-->
+        <!--<name>hadoop.security.authentication</name>-->
+        <!--<value>kerberos</value> &lt;!&ndash; A value of "simple" would disable security. &ndash;&gt;-->
+    <!--</property>-->
 
-    <property>
-        <name>hadoop.security.authorization</name>
-        <value>true</value>
-    </property>
+    <!--<property>-->
+        <!--<name>hadoop.security.authorization</name>-->
+        <!--<value>true</value>-->
+    <!--</property>-->
 </configuration>

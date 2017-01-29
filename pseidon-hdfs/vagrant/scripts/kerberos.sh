@@ -57,14 +57,17 @@ if [ ! -d "$KRB5DIR" ]; then
 
     sudo /usr/local/sbin/kadmin.local ktadd -k "$KRB5DIR"/kadm5.keytab kadmin/admin kadmin/changepw
 
-    for srv in client1 hdfs1; do
+
+    find /vagrant/vagrant/keytabs -iname "*.keytab" -exec rm -f {} \;
+
+    for srv in client1 hdfs1 hdfs2; do
 
         sudo /usr/local/sbin/kadmin.local -q "addprinc -randkey hdfs/${srv}.hdfs-pseidon@HDFS-PSEIDON"
         sudo /usr/local/sbin/kadmin.local -q "addprinc -randkey HTTP/${srv}.hdfs-pseidon@HDFS-PSEIDON"
 
         mkdir -p /vagrant/vagrant/keytabs/${srv}
 
-        sudo /usr/local/sbin/kadmin.local -q "ktadd -norandkey -k /vagrant/vagrant/keytabs/${srv}/hdfs.keytab hdfs/${srv}.hdfs-pseidon@HDFS-PSEIDON HTTP/${srv}.hdfs-pseidon@HDFS-PSEIDON"
+        sudo /usr/local/sbin/kadmin.local -q "ktadd -norandkey -k /vagrant/vagrant/keytabs/${srv}/${srv}.keytab hdfs/${srv}.hdfs-pseidon@HDFS-PSEIDON HTTP/${srv}.hdfs-pseidon@HDFS-PSEIDON"
 
     done
 

@@ -99,12 +99,24 @@ of that used for hadoop and hive in production, refer to the ```pom.xml``` file.
  <tr><td>:secure-keytab</td><td>Indicates that kerberos authentication user keytab</td></tr>
 </table>
 
+### HA configuration options
+
+<table>
+  <tr><td>dfs.nameservices</td><td>The logic name used</td></tr>
+
+  <tr><td>dfs.client.failover.proxy.provider.```${dfs.nameservices}```</td><td>value should be "org.apache.hadoop.hdfs.server.namenode.ha.ConfiguredFailoverProxyProvider"
+                                                                          remember to change ```${dfs.nameservices}``` for the value configured in the nameservices
+                                                                    </td></tr>
+  <tr><td></td><td></td></tr>
+
+</table>
 ### Other configuration options
 
 <table>
 <tr><td>:file-wait-time-ms</td><td>default 30000, milliseconds that a file should be old before its checked for upload</td></tr>
 <tr><td>:hdfs-copy-freq</td><td>default 1000, milliseconds that files are checked for upload</td></tr>
 </table>
+
 ###Monitoring
 
 <table>

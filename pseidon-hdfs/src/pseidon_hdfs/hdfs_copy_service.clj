@@ -7,7 +7,7 @@
     "}
   pseidon-hdfs.hdfs-copy-service
   (:import [java.io File IOException DataOutputStream]
-           (org.apache.hadoop.fs FileSystem)
+           (org.apache.hadoop.fs FileSystem Path)
            (org.apache.hadoop.conf Configuration)
            [java.util.concurrent ExecutorService TimeUnit]
            (org.joda.time DateTime)
@@ -539,6 +539,17 @@
                            ;org.apache.hadoop.yarn.security.admin.AdminSecurityInfo
                            ])
 
+(defn check-ha-failover-defined! [^Configuration conf]
+  (when-let [services (.get conf "dfs.nameservices")]
+    (let [ha-proxy-var (str "dfs.client.failover.proxy.provider." services)
+          ha-proxy (.get conf ha-proxy-var)]
+      (when-not ha-proxy
+        (.set conf ha-proxy-var "org.apache.hadoop.hdfs.server.namenode.ha.ConfiguredFailoverProxyProvider"))
+
+      (info (str "Using " ha-proxy-var " => " ha-proxy))))
+
+  conf)
+
 ;depends on conf => configuretation map, db => db-service component
 (defrecord HdfsCopyService [conf app-status db monitor-service]
   component/Lifecycle
@@ -548,6 +559,8 @@
       (let [;;;FileSystem is not thread safe, we need to create a new instance
             ;;;from the config source for every thread
             ^Configuration hdfs-conf (map->hdfs-conf (get-in component [:conf :hdfs-conf]))
+
+            _ (do (check-ha-failover-defined! hdfs-conf))
 
             base-dir (get-in component [:conf :local-dir])
 
