@@ -190,7 +190,7 @@
                                 <data>
                                     <paths>
                                         <path>${basedir}/resources/conf/pseidon.edn</path>
-                                        <path>${basedir}/resources/conf/log4j.properties</path>
+                                        <path>${basedir}/resources/conf/log4j.xml</path>
                                     </paths>
 
                                     <type>files</type>

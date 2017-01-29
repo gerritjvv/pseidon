@@ -99,12 +99,46 @@ of that used for hadoop and hive in production, refer to the ```pom.xml``` file.
  <tr><td>:secure-keytab</td><td>Indicates that kerberos authentication user keytab</td></tr>
 </table>
 
+### HA configuration options
+
+<table>
+  <tr><td>dfs.nameservices</td><td>The logic name used</td></tr>
+
+  <tr><td>dfs.client.failover.proxy.provider.```${dfs.nameservices}```</td><td>value should be "org.apache.hadoop.hdfs.server.namenode.ha.ConfiguredFailoverProxyProvider"
+                                                                          remember to change ```${dfs.nameservices}``` for the value configured in the nameservices
+                                                                    </td></tr>
+  <tr><td></td><td></td></tr>
+
+</table>
+
+
+*Example configuration*
+
+The starting point here is the "dfs.nameservices" property in the core-site.xml file.
+Use this "logical"/fake address as the defaultFS address as below (in my tests it is pseidon-hdfs).
+The client must have the "dfs.nameservices" property specified to know what is the "fake" address.
+Then for each name node we must specify "dfs.ha.namenodes.pseidon-hdfs" and dfs.namenode.rpc-address.pseidon-hdfs.${node}
+
+```
+
+:hdfs-conf {"fs.default.name" "hdfs://pseidon-hdfs:8020"
+             "fs.defaultFS" "hdfs://pseidon-hdfs:8020"
+             "fs.hdfs.impl" "org.apache.hadoop.hdfs.DistributedFileSystem"
+             "dfs.nameservices" "pseidon-hdfs"
+             "dfs.client.failover.proxy.provider.pseidon-hdfs" "org.apache.hadoop.hdfs.server.namenode.ha.ConfiguredFailoverProxyProvider"
+             "dfs.ha.namenodes.pseidon-hdfs" "hdfs1,hdfs2"
+             "dfs.namenode.rpc-address.pseidon-hdfs.hdfs1" "hdfs1.hdfs-pseidon:8020"
+             "dfs.namenode.rpc-address.pseidon-hdfs.hdfs2" "hdfs2.hdfs-pseidon:8020"
+            }
+
+```
 ### Other configuration options
 
 <table>
 <tr><td>:file-wait-time-ms</td><td>default 30000, milliseconds that a file should be old before its checked for upload</td></tr>
 <tr><td>:hdfs-copy-freq</td><td>default 1000, milliseconds that files are checked for upload</td></tr>
 </table>
+
 ###Monitoring
 
 <table>
