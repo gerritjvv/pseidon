@@ -12,14 +12,10 @@ import java.util.stream.Stream;
 public class Util {
 
     public static final <T> Collection<T> reverse(Collection<T> coll){
-        List<T> reverseList = new ArrayList<T>(coll.size());
+        List<T> list = new ArrayList<>(coll);
+        Collections.reverse(list);
 
-        int index = coll.size()-1;
-
-        for(T item : coll)
-            reverseList.set(index--, item);
-
-        return reverseList;
+        return list;
     }
 
     public static Class<Plugin> asPluginClass(String cls){
@@ -43,12 +39,6 @@ public class Util {
             return "";
         else if(o instanceof Named)
             return ((Named)o).getName();
-        else if(o instanceof String[]){
-            return String.join(", ", (String[])o);
-        }
-        else if(o instanceof Collection){
-            return String.join(", ", (Collection)o);
-        }
         else
             return o.toString();
     }

@@ -1,7 +1,6 @@
 package pseidon.plugin;
 
 import org.junit.Test;
-import pseidon.plugin.pipeline.AllAction;
 import pseidon.plugin.pipeline.ComposedAction;
 import pseidon.util.Functional;
 
@@ -9,7 +8,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
 
 import static org.junit.Assert.assertEquals;
@@ -27,7 +25,7 @@ public class ComposedActionTest extends AbstractionActionTest {
         List<Integer> results = new ArrayList<>();
 
         new ComposedAction(Arrays.asList(incMsg(results)))
-                .apply(new Message.DefaultMessage("test", Arrays.asList(0)));
+                .apply(new PMessage.DefaultPMessage("test", Arrays.asList(0)));
 
         assertEquals(results.size(), 1);
         assertEquals(results.get(0).intValue(), 0);
@@ -41,7 +39,7 @@ public class ComposedActionTest extends AbstractionActionTest {
 
         List<Integer> results = new ArrayList<>();
 
-        List<Function<Message, Message>> callFunctions = Functional.reduce(
+        List<Function<PMessage, PMessage>> callFunctions = Functional.reduce(
                 Functional.range(0, n),
                 new ArrayList<>(),
 
@@ -51,15 +49,15 @@ public class ComposedActionTest extends AbstractionActionTest {
                 });
 
 
-        new ComposedAction(callFunctions).apply(new Message.DefaultMessage("test", Arrays.asList(0)));
+        new ComposedAction(callFunctions).apply(new PMessage.DefaultPMessage("test", Arrays.asList(0)));
 
         for(int i = 0; i < n; i++)
             assertEquals(i, results.get(i).intValue());
     }
 
-    private Function<Message, Message> incMsg(List<Integer> results) {
-        return (Message msg) -> {
-            Integer v = (Integer)msg.msgs().iterator().next();
+    private Function<PMessage, PMessage> incMsg(List<Integer> results) {
+        return (PMessage msg) -> {
+            Integer v = (Integer)msg.getMessages().iterator().next();
             results.add(v);
             return msg.updateMsgs(Arrays.asList(v+1));
         };

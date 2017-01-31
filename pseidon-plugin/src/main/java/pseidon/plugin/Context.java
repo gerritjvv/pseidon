@@ -5,14 +5,18 @@ import org.slf4j.LoggerFactory;
 import pseidon.util.Functional;
 
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Map;
-import java.util.StringJoiner;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Configuration interface
+ * Configuration interface. <br/>
+ * {@link Plugin}(s) are passed an instance of the current context and configuration<br/>
+ * on startup see {@link Plugin#init(Context)}
  */
 public interface Context extends Map {
+
+    <T> T getConf(String name);
 
     void debug(String... msgs);
     void info(String... msgs);
@@ -21,6 +25,21 @@ public interface Context extends Map {
     class DefaultCtx extends ConcurrentHashMap implements Context {
 
         private static final Logger LOG = LoggerFactory.getLogger(DefaultCtx.class);
+
+        final Map<?, ?> conf;
+
+        public DefaultCtx(){
+            this(new HashMap());
+        }
+        public DefaultCtx(Map<?, ?> conf) {
+            this.conf = conf;
+        }
+
+
+        @Override
+        public <T> T getConf(String name) {
+            return (T)conf.get(name);
+        }
 
         @Override
         public void debug(String... msgs) {

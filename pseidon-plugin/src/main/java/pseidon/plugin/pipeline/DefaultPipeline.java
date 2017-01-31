@@ -1,26 +1,35 @@
 package pseidon.plugin.pipeline;
 
-import pseidon.plugin.Message;
-import pseidon.plugin.PluginPipeline;
+import pseidon.plugin.PMessage;
+import pseidon.plugin.Pipeline;
+import pseidon.plugin.Plugin;
+import pseidon.util.Functional;
 
-import java.io.File;
+import java.util.Collection;
+import java.util.Map;
 import java.util.function.Function;
 
-public class DefaultPipeline<T, R> implements PluginPipeline<T, R> {
+/**
+ *
+ */
+public class DefaultPipeline<T> implements Pipeline<T>{
 
-    final Function<Message<T>, Message<R>> fn;
+    private final Map<String, Plugin> mappings;
+    private final Function<PMessage, PMessage> fn;
 
-    public DefaultPipeline(Function<Message<T>, Message<R>> fn) {
+    public DefaultPipeline(Map<String, Plugin> mappings, Function<PMessage, PMessage> fn) {
+        this.mappings = mappings;
         this.fn = fn;
     }
 
+
     @Override
-    public Message<R> apply(Message<T> message) {
-        return fn.apply(message);
+    public void close() {
+        mappings.values().forEach(Plugin::shutdown);
     }
 
-    public static final <T, R> PluginPipeline<T, R> create(File ednFile){
-
-        return null;
+    @Override
+    public PMessage<T> apply(PMessage<T> message) {
+        return fn.apply(message);
     }
 }

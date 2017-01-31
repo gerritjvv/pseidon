@@ -70,7 +70,7 @@ public class Functional {
 
             subList.add(item);
 
-            if(index++ % n == 0){
+            if(++index % n == 0){
                 partitions.add(subList);
                 subList = new ArrayList<>(n);
             }

@@ -10,8 +10,8 @@ import static org.junit.Assert.assertNotNull;
  */
 public class AbstractionActionTest {
 
-    public Function<Message, Message> createFn(AtomicBoolean v) {
-        return (Message s) -> {
+    public Function<PMessage, PMessage> createFn(AtomicBoolean v) {
+        return (PMessage s) -> {
             assertNotNull(s);
             v.set(true);
             return null;
@@ -19,7 +19,7 @@ public class AbstractionActionTest {
     }
 
 
-    public static final Message<String> testMessage() {
-        return new Message.DefaultMessage<>("abc", Arrays.asList("data"));
+    public static final PMessage<String> testMessage() {
+        return new PMessage.DefaultPMessage<>("abc", Arrays.asList("data"));
     }
 }

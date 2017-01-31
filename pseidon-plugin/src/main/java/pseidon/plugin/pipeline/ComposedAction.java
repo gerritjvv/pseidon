@@ -1,25 +1,22 @@
 package pseidon.plugin.pipeline;
 
-import pseidon.plugin.Context;
-import pseidon.plugin.Message;
+import pseidon.plugin.PMessage;
 import pseidon.util.Functional;
-import pseidon.util.Util;
 
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.function.Function;
 
 /**
  * Composes from left to right
  */
-public class ComposedAction implements Function<Message, Message>{
+public class ComposedAction implements Function<PMessage, PMessage>{
 
-    final Function<Message, Message> fn;
+    final Function<PMessage, PMessage> fn;
 
 
-    public ComposedAction(Collection<Function<Message, Message>> actions){
-        Iterator<Function<Message, Message>> actionsIt = actions.iterator();
+    public ComposedAction(Collection<Function<PMessage, PMessage>> actions){
+        Iterator<Function<PMessage, PMessage>> actionsIt = actions.iterator();
 
         if(!actionsIt.hasNext())
             fn = Functional.identity();
@@ -31,7 +28,7 @@ public class ComposedAction implements Function<Message, Message>{
     }
 
     @Override
-    public Message apply(Message o) {
+    public PMessage apply(PMessage o) {
         return fn.apply(o);
     }
 }

@@ -54,8 +54,8 @@ public class MatchActionTest {
             T val = vals.get(i);
 
             assertEquals(
-                    matchAction.apply(new Message.DefaultMessage(id, null))
-                            .msgs().iterator().next(),
+                    matchAction.apply(new PMessage.DefaultPMessage(id, 1))
+                            .getMessages().iterator().next(),
                     val);
         }
 
@@ -66,7 +66,7 @@ public class MatchActionTest {
         return Arrays.asList(match, matchedFn(match));
     }
 
-    private <T> Function<Message, Message> matchedFn(T id){
+    private <T> Function<PMessage, PMessage> matchedFn(T id){
         return m -> m.updateMsgs(Arrays.asList(id));
     }
 

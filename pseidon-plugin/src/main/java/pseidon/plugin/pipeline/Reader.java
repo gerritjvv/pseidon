@@ -1,6 +1,7 @@
 package pseidon.plugin.pipeline;
 
 import pseidon.util.Functional;
+import us.bpsm.edn.Named;
 import us.bpsm.edn.Tag;
 import us.bpsm.edn.parser.Parseable;
 import us.bpsm.edn.parser.Parser;
@@ -38,15 +39,18 @@ public class Reader {
                 conf,
                 new HashMap<>(),
                 (m, k, v) -> {
-                    m.put(
-                            asString(k),
-                            asPluginClass(asString(v)));
+
+                    if(!k.equals("pipeline")){
+                        m.put(
+                                asString(k),
+                                asPluginClass(asString(v)));
+                    }
                     return m;
                 });
     }
 
     public static Collection getPipeline(Map<?, ?> conf){
-        return (Collection) conf.get(newSymbol("pipeline"));
+        return (Collection) conf.get("pipeline");
     }
 
     /**
@@ -69,7 +73,7 @@ public class Reader {
                     new HashMap<>(),
 
                     (m, k, v) -> {
-                        m.put(asString(k), asString(v));
+                        m.put(asString(k), (v instanceof Named) ? ((Named)v).getName() : v);
                     return m;});
 
         } catch (Exception e) {

@@ -1,7 +1,6 @@
 package pseidon.plugin.pipeline;
 
-import pseidon.plugin.Message;
-import pseidon.plugin.Plugin;
+import pseidon.plugin.PMessage;
 import pseidon.util.Functional;
 import pseidon.util.Util;
 
@@ -22,9 +21,9 @@ import static pseidon.util.Util.asString;
  * <br/>
  * string-matcher can be a String or a java.util.Pattern
  */
-public class MatchAction implements Function<Message, Message> {
+public class MatchAction implements Function<PMessage, PMessage> {
 
-    final Function<Message, Message> fn;
+    final Function<PMessage, PMessage> fn;
 
     /**
      *
@@ -45,22 +44,22 @@ public class MatchAction implements Function<Message, Message> {
 
     }
 
-    private static final Function<Message, Message> matcherFn(Function<Message, Message> continuation, List matchPair){
+    private static final Function<PMessage, PMessage> matcherFn(Function<PMessage, PMessage> continuation, List matchPair){
         if(matchPair.size() != 2)
             throw new RuntimeException("Cannot create match action, must have equal number of match plugin actions");
 
-        return matcherFn(asString(matchPair.get(0)), (Function<Message, Message>)matchPair.get(1), continuation);
+        return matcherFn(asString(matchPair.get(0)), (Function<PMessage, PMessage>)matchPair.get(1), continuation);
     }
 
     /**
      * if patternStr is a Pattern a regex match is done, otherwise its casted to a string and equals is used.
      */
-    private static final Function<Message, Message> matcherFn(Object patternStr, Function<Message, Message> actionFn, Function<Message, Message> continuation){
+    private static final Function<PMessage, PMessage> matcherFn(Object patternStr, Function<PMessage, PMessage> actionFn, Function<PMessage, PMessage> continuation){
         if(patternStr instanceof Pattern){
 
             Predicate<String> matcher = ((Pattern)patternStr).asPredicate();
 
-            return (Message v) -> {
+            return (PMessage v) -> {
                 if(matcher.test(v.getType()))
                     return actionFn.apply(v);
                 else
@@ -72,7 +71,7 @@ public class MatchAction implements Function<Message, Message> {
 
             String str = Util.asString(patternStr);
 
-            return (Message v) -> {
+            return (PMessage v) -> {
                 if(v.getType().equals(str))
                     return actionFn.apply(v);
                 else
@@ -83,7 +82,7 @@ public class MatchAction implements Function<Message, Message> {
     }
 
     @Override
-    public Message apply(Message o) {
+    public PMessage apply(PMessage o) {
         return fn.apply(o);
     }
 }
