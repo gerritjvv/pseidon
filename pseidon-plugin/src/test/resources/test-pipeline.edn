@@ -1,0 +1,10 @@
+{
+ a pseidon.plugin.IncPlugin
+ b pseidon.plugin.IncPlugin
+ c pseidon.plugin.IncPlugin
+ d pseidon.plugin.IncPlugin
+
+ ;;if message is "double" result is 0 -> 4 otherwise 0 -> 3
+ pipeline (-> a b (match "double" c) (all d))
+
+ }
