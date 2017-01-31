@@ -31,6 +31,23 @@ Exmaple
 
 A plugin takes a pseidon.plugin.PMessage and returns a pseidon.plugin.PMessage.
 
+### Example Plugin
+
+```
+public class IncPlugin implements Plugin<Integer, Integer>{
+
+    @Override
+    public PMessage<Integer> apply(PMessage<Integer> integerMessage) {
+        int v = integerMessage.getSingleMessage() + 1;
+
+        System.out.println("IncPlugin:apply: " + integerMessage.getSingleMessage() + " -> " + v);
+
+        return integerMessage.updateMsgs(Arrays.asList(v));
+    }
+}
+```
+
+
 #### LifeCycle
 
 All plugins defined in the edn file are instantiated and initialised with a context.
