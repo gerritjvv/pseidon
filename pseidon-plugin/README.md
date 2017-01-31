@@ -10,7 +10,7 @@ The plugin pipeline definition is loaded via an edn script.
 
 Exmaple
 
-```
+```clojure
 {
  ;; define plugins as name pluginclass
 
@@ -33,7 +33,7 @@ A plugin takes a pseidon.plugin.PMessage and returns a pseidon.plugin.PMessage.
 
 ### Example Plugin
 
-```
+```java
 public class IncPlugin implements Plugin<Integer, Integer>{
 
     @Override
@@ -52,7 +52,7 @@ public class IncPlugin implements Plugin<Integer, Integer>{
 
 All plugins defined in the edn file are instantiated and initialised with a context.
 
-```
+```java
 Plugin plugin = (Plugin)v.newInstance();
 plugin.init(ctx);
 ```
@@ -63,6 +63,6 @@ On application shutdown the plugins shutdown method is calls.
 
 When developing its useful to test and run the pipeline before deploying.
 
-```
+```java
 Pipeline<?> fn = PipelineParser.parse(new Context.DefaultCtx(), Reader.read(EDN_FILE));
 ```
