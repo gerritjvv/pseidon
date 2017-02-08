@@ -42,6 +42,16 @@ public interface PMessage<T> {
 
     PMessage<T> updateMsgs(String type);
 
+    static <T> PMessage<T> instance(String type, T msg)
+    {
+        return new DefaultPMessage<T>(type, msg);
+    }
+
+    static <T> PMessage<T> instance(String type, Collection<T> msgs)
+    {
+        return new DefaultPMessage<T>(type, msgs);
+    }
+
     class DefaultPMessage<T> implements PMessage<T> {
 
         private final String type;

@@ -54,7 +54,7 @@ public class MatchActionTest {
             T val = vals.get(i);
 
             assertEquals(
-                    matchAction.apply(new PMessage.DefaultPMessage(id, 1))
+                    matchAction.apply(PMessage.instance(id, 1))
                             .getMessages().iterator().next(),
                     val);
         }

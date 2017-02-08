@@ -14,25 +14,31 @@ public class PipelineParserTest {
 
     private static final String EDN_FILE = "src/test/resources/test-pipeline.edn";
 
+    private static final String BATCHED_EDN_FILE = "src/test/resources/test-batched-inc-pipeline.edn";
+
+    private static final String SIMPLE_EDN_FILE = "src/test/resources/test-simple-inc-pipeline.edn";
+
     @Test
-    public void testParserRun(){
+    public void testIncPlugin(){
+        parserRun(EDN_FILE);
+    }
 
-        /* pipeline definition:
+    @Test
+    public void testBatchedIncPlugin(){
+        parserRun(SIMPLE_EDN_FILE);
+    }
 
-         a pseidon.plugin.IncPlugin
-         b pseidon.plugin.IncPlugin
-         c pseidon.plugin.IncPlugin
-         d pseidon.plugin.IncPlugin
+    @Test
+    public void testSimpleIncPlugin(){
+        parserRun(BATCHED_EDN_FILE);
+    }
 
-         ;;if message is "double" result is 0 -> 4 otherwise 0 -> 3
-         pipeline (-> a b (match "double" c) (all d))
-         */
+    public void parserRun(String ednFile){
 
-        Pipeline<?> fn = PipelineParser.parse(new Context.DefaultCtx(), Reader.read(EDN_FILE));
+        Pipeline<Integer> fn = PipelineParser.parse(Context.instance(), Reader.read(ednFile));
 
-
-        PMessage<Integer> m1 = fn.apply(new PMessage.DefaultPMessage("single", 0));
-        PMessage<Integer> m2 = fn.apply(new PMessage.DefaultPMessage("double", 0));
+        PMessage<Integer> m1 = fn.apply(PMessage.instance("single", 0));
+        PMessage<Integer> m2 = fn.apply(PMessage.instance("double", 0));
 
         assertEquals(m1.getSingleMessage().intValue(), 3);
 
