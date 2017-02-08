@@ -25,8 +25,46 @@ The pseidon-etl uses the following tables:
 :writer {:parallel-files 1 :out-buffer-size 500000 :use-buffer false :flush-on-write true :write-multiplier 1}
 ```
 
+#### Plugins
+
+See pseidon-plugin for detailed information.
+
+This system can be customised with a plugin pipeline and custom classes, that must be available
+on the classpath (in the /opt/pseidon-etl2/lib/) directory.
+
+The default pipeline is:
+
+```clojure
+{
+
+ :plugins {
+           pipeline (-> disk-writer)
+          }
+}
+```
+
+To specify a custom pipeline do:
+
+```clojure
+{
+ ;; define plugins as name pluginclass
+ ;; you can still use the disk-writer plugin without defining it
+ a pseidon.plugin.IncPlugin
+ b pseidon.plugin.IncPlugin
+ c pseidon.plugin.IncPlugin
+ d pseidon.plugin.IncPlugin
+
+ ;;define pipeline and refer to plugins via name
+ ;;if message is "double" result is 0 -> 4 otherwise 0 -> 3
+ pipeline (-> a b (match "double" c) (all d))
+
+ }
+```
 
 #### Disk Write
+
+If part of the pluging system under the name "disk-writer", and will be used by default
+if no ":plugins" property is defined.
 
 <table>
 <tr><td>:data-dir</td><td></td><td>Directory where files will be written to, must have pseidon user write permissions</td></tr>
