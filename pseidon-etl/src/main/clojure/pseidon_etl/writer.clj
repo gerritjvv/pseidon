@@ -17,7 +17,7 @@
     (org.joda.time DateTime)
     (java.nio.charset StandardCharsets)
     (java.util.concurrent.atomic AtomicLong)
-    (pseidon_etl Util)))
+    (pseidon_etl Util FormatMsg TopicMsg)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;; Global variables Records and Schemas
@@ -27,14 +27,15 @@
 
 (deftype WriterMetricsKey [node topic file-name])
 
-;msg should be the json message
-(defrecord TopicMsg [^String topic msg codec])
-(defn wrap-msg
+(defn ^TopicMsg ->TopicMsg [^String topic ^FormatMsg msg ^String codec]
+  (TopicMsg. topic codec msg))
+
+(defn ^TopicMsg wrap-msg
   "topic:
    msg: foramts/FormatMsg
    codec: gzip, parquet, txt"
-  ([topic msg] (wrap-msg topic msg nil))
-  ([topic msg codec] (->TopicMsg topic msg codec)))
+  ([topic ^FormatMsg msg] (wrap-msg topic msg nil))
+  ([topic ^FormatMsg msg codec] (->TopicMsg topic msg codec)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;; Private functions
@@ -75,21 +76,11 @@
                   (get-local-dt-hr-str ts)))))
   ([{:keys [topic msg]}]
     ;; msg must be of type formats/FormatMsg
-
+    (prn "############################see message " msg)
    (msg->topic-datehr topic (:ts msg))))
 
 (defn- ^"[B" str->bts [^String s]
   (.getBytes s StandardCharsets/UTF_8))
-
-(defn bytes? [x]
-  (= (Class/forName "[B")
-     (class x)))
-
-(defn ^"[B" as-bytes [topic-msg]
-  (let [msg (:msg topic-msg)]
-    (if (instance? byte-array-class msg)
-      msg
-      (str->bts (clj-json/generate-string msg)))))
 
 ;;helper function that deals with nil numbers
 (defn _safe-add [a b]

@@ -32,6 +32,17 @@ See pseidon-plugin for detailed information.
 This system can be customised with a plugin pipeline and custom classes, that must be available
 on the classpath (in the /opt/pseidon-etl2/lib/) directory.
 
+The input message is
+
+```clojure
+(defrecord TopicMsg [^String topic msg codec])
+```
+
+or in Java
+
+```
+```
+
 The default pipeline is:
 
 ```clojure

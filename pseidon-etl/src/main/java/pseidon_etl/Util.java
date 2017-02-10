@@ -1,11 +1,16 @@
 package pseidon_etl;
 
 import clojure.lang.Counted;
+import clojure.lang.IFn;
 import clojure.lang.ISeq;
 import org.apache.commons.lang3.StringUtils;
+import pseidon.plugin.AbstractBatchedPlugin;
+import pseidon.plugin.PMessage;
+import pseidon.plugin.Plugin;
 
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.util.Collection;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -13,6 +18,12 @@ import java.util.concurrent.TimeUnit;
  */
 public class Util {
 
+    /**
+     * Return an new instance of AbstractBatchedPlugin
+     */
+    public static final Plugin asPlugin(IFn fn){
+        return new IFnPlugin(fn);
+    }
 
     public static final byte[] readFile(String file) throws IOException {
         FileInputStream in = new FileInputStream(file);

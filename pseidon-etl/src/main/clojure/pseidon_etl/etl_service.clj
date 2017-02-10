@@ -8,7 +8,8 @@
     (pseidon.plugin.pipeline PipelineParser)
     (pseidon.plugin Context$DefaultCtx PMessage$DefaultPMessage Context PMessage Plugin)
     (java.util Map Collection)
-    (java.util.function Function))
+    (java.util.function Function)
+    (pseidon_etl FormatMsg TopicMsg Util))
   (:require [thread-load.core :as load]
             [fun-utils.queue :as futils-queue]
             [pseidon-etl.memory :as memory]
@@ -50,11 +51,10 @@
 
 (defn- default-terminate [state & _] (assoc state :status :terminate))
 
-(defn wrap-msg
+(defn ^TopicMsg wrap-msg
   "Msg can be an object or a byte array, the object is parsed to a json string and then the bytes are extracted
    "
-  ([state topic msg]
-    ;;msg must have type formats/FormatMsg
+  ([state topic ^FormatMsg msg]
    (try
      (let [output-format (topic-service/get-output-format topic (:conf state) (:db state))
            codec (condp = (name output-format)
@@ -64,7 +64,6 @@
                    "bzip2"   :bzip2
                    :gzip)]
 
-       ;note that only messages with a none nil node and batch-ts will be written to the etl map log
        (writer/wrap-msg topic msg codec))
      (catch Exception e
        (error e e)))))
@@ -91,7 +90,7 @@
 
     ;;msgs2 == (defrecord TopicMsg [^String topic msg codec])
     ;; group by topic and send to pipeline
-    (doseq [[topic grouped-msgs] (group-by :topic msgs2)]
+    (doseq [[topic grouped-msgs] (group-by #(.getTopic ^TopicMsg %) msgs2)]
       (.apply plugin-pipeline (PMessage/instance (str topic) ^Collection grouped-msgs)))))
 
 (defn- metric->map [^Meter timer]
@@ -139,28 +138,25 @@
   (util/wait-till-no-files (get-in component [:conf :data-dir] "/tmp/"))
   (dissoc component :etl-service))
 
-(defn disk-writer-plugin
+(defn ^Plugin disk-writer-plugin
   "Create a plugin that will use the writer namespace
    and send for each message in the PMessage a call to writer/multi-write"
   [state]
   (let [writer-ctx (:writer-ctx state)]
-
-    (reify Plugin
-      (apply [_ ^PMessage pmsg]
-        (doseq [msg (.getMessages pmsg)]
-          (writer/multi-write writer-ctx msg))
-        nil))))
+    (Util/asPlugin (fn [^PMessage pmsg]
+                     (doseq [msg (.getMessages pmsg)]
+                       (writer/multi-write writer-ctx msg))))))
 
 (defn ^Map default-plugins
   "Create the default plugins that are available to the :plugins pipeline"
   [state]
   {"disk-writer" (disk-writer-plugin state)})
 
-(defn read-plugin-pipeline [state {:keys [plugins]}]
+(defn read-plugin-pipeline [state {:keys [plugins] :as conf}]
 
   (if plugins
     (PipelineParser/parse (Context/instance ^Map conf (default-plugins state)) (reduce-kv #(assoc %1 (name %2) (name %3)) {} conf))
-    (throw (RuntimeException. (str "Please define :plugins see https://github.com/gerritjvv/pseidon/tree/master/pseidon-plugin")))))
+    (PipelineParser/parse (Context/instance ^Map conf (default-plugins state)) {:pipeline '(-> disk-writer)})))
 
 (defrecord ETLService [conf db topic-service kafka-node kafka-client writer-service monitor-service]
   component/Lifecycle
@@ -202,7 +198,7 @@
                       :writer-ctx writer-ctx
                       :shutdown-flag shutdown-flag)
 
-              state (assoc state1 :plugin-pipeline (read-plugin-pipeline state conf))
+              state (assoc state1 :plugin-pipeline (read-plugin-pipeline state1 conf))
 
               ^MetricRegistry metric-registry (MetricRegistry.)
               req-metric (.meter metric-registry "pseidon-etl-req-p/s")

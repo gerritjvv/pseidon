@@ -1,7 +1,6 @@
 (ns pseidon-etl.formats-test
   (:require [pseidon-etl.formats :as formats]
-            [clojure.test :refer :all])
-  (:import (pseidon_etl.formats Format)))
+            [clojure.test :refer :all]))
 
 
 (deftest test-parse-format

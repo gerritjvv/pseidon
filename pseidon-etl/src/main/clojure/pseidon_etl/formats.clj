@@ -34,26 +34,30 @@
   (:require [clojure.string :as string]
             [clj-time.coerce :as c])
   (:import (java.util Map Date)
-           (org.apache.commons.lang3 StringUtils)))
+           (org.apache.commons.lang3 StringUtils)
+           (pseidon_etl FormatMsg$Format FormatMsg)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;; Data Types and multimethods
 
-(defrecord Format [^String type ^Map props])
 
-(defrecord FormatMsg [format ^long ts ^"[B" bts msg])
+(defmulti bts->msg (fn [conf topic format bts] (.getType ^FormatMsg$Format format)))
 
-(defmulti bts->msg (fn [conf topic format bts] (:type format)))
+(defmulti msg->string (fn [conf topic format msg] (.getType ^FormatMsg$Format format)))
 
-(defmulti msg->string (fn [conf topic format msg] (:type format)))
+(defmulti msg->bts (fn [conf topic format msg] (.getType ^FormatMsg$Format format)))
 
-(defmulti msg->bts (fn [conf topic format msg] (:type format)))
+(defmulti format-descriptor (fn [state conf format] (.getType ^FormatMsg$Format format)))
 
-(defmulti format-descriptor (fn [state conf format] (:type format)))
-
-(defmulti dispose-format (fn [state conf format] (:type format)))
+(defmulti dispose-format (fn [state conf format] (.getType ^FormatMsg$Format format)))
 
 (declare parse-format)
+
+(defn ^FormatMsg$Format ->Format [^String type ^Map props]
+  (FormatMsg$Format. type props))
+
+(defn ^FormatMsg ->FormatMsg [^FormatMsg$Format format ^long ts ^"[B" bts msg]
+  (FormatMsg. format ts bts msg))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;; utility functions
@@ -83,8 +87,8 @@
     :else BYTE1))
 
 
-(defn split-type [format]
-  (let [sep-str (get (:props format) "sep")]
+(defn split-type [^FormatMsg$Format format]
+  (let [sep-str (get (.getProps format) "sep")]
     (if sep-str
       (parse-special-split-words sep-str)
       BYTE1)))
@@ -100,10 +104,10 @@
 (defn vals-as-map [xs]
   (reduce (fn [m [k v]] (assoc m k (cast-value v))) {} (partition 2 xs)))
 
-(defn parse-format [^String input]
+(defn ^FormatMsg$Format parse-format [^String input]
   (let [[type args] (string/split input #":")
         props (vals-as-map (string/split args #"[=;]"))]
-    (->Format (str type) props)))
+    (->Format (str type) ^Map props)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;; format implementations
@@ -115,23 +119,23 @@
 
 ;;;;;;; txt support
 
-(defn txtmsg->ts ^long [format msg]
-  (let [ts-index (get (:props format) "ts")]
+(defn txtmsg->ts ^long [^FormatMsg$Format format msg]
+  (let [ts-index (get (.getProps format) "ts")]
     (if (number? ts-index)
       (ts->long (nth msg ts-index))
       (System/currentTimeMillis))))
 
-(defn txt->msg [format ^"[B" bts]
+(defn txt->msg [^FormatMsg$Format format ^"[B" bts]
   (StringUtils/split (String. bts "UTF-8") (char (split-type format))))
 
-(defmethod bts->msg "txt" [_ _ format bts]
+(defmethod bts->msg "txt" [_ _ ^FormatMsg$Format format bts]
   (let [msg (txt->msg format bts)
         ts (txtmsg->ts format msg)]
     (->FormatMsg format ts bts msg)))
 
-(defmethod msg->string "txt" [_ _ _ msg]
-  (String. ^"[B" (:bts msg) "UTF-8"))
+(defmethod msg->string "txt" [_ _ _ ^FormatMsg msg]
+  (String. ^"[B" (.getBts msg) "UTF-8"))
 
-(defmethod msg->bts "txt" [_ _ _ msg]
-  (:bts msg))
+(defmethod msg->bts "txt" [_ _ _ ^FormatMsg msg]
+  (.getBts msg))
 
