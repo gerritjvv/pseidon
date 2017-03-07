@@ -65,7 +65,7 @@
                           :kafka-node      :kafka-node}))
 
       :kafka-client (:kafka-client-service service-overrides
-                      (create-client-service (:kafka-brokers conf) (merge {:consume-step 1} conf)))
+                      (create-client-service (:kafka-brokers conf) (merge {:consume-step 10000} conf)))
 
       :etl-service (:etl-service service-overrides
                      (component/using

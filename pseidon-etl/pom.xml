@@ -480,7 +480,7 @@
         <dependency>
             <groupId>kafka-clj</groupId>
             <artifactId>kafka-clj</artifactId>
-            <version>4.0.1-SNAPSHOT</version>
+            <version>4.0.2-SNAPSHOT</version>
             <exclusions>
                 <exclusion>
                     <groupId>org.clojure</groupId>
