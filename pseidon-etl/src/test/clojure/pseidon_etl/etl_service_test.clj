@@ -18,20 +18,21 @@
       [clojure.java.jdbc :as j]))
 
 
-
+;
 ;(defonce state-ref (ref {}))
 ;(defonce system (atom nil))
 ;
-;(defonce test-msg {"data" [(msg->json (slurp "testmessages"))]})
+;;(defonce test-msg {"data" [(msg->json (slurp "testmessages"))]})
 ;
-;(defonce topic "adx-bid-requests")
+;(defonce topic "mytests")
 ;
-;(defn id-f [& args] args)
 ;
 ;(defn send-test-messages [system topic n]
-;  (let [c (get-in system [:kafka-client :client])]
-;    (dotimes [_ n]
-;      (send-msg c topic (json->bts test-msg)))))
+;  ;(let [c (get-in system [:kafka-client :client])]
+;  ;  (dotimes [_ n]
+;  ;    (send-msg c topic (json->bts test-msg))))
+;  ;
+;  )
 ;
 ;(defn- load-resources []
 ;  (let [resources (startup-resources topic)]
@@ -106,14 +107,13 @@
 ;                .mkdirs))
 ;
 ;(deftest run-etl-service
-;  (stubbing
-;    (with-state-changes [(before :facts (reset! system (start data-dir)))
+;  (with-state-changes [(before :facts (reset! system (start data-dir)))
 ;
-;                         (after :facts (if @system (stop @system)))
-;                         ]
+;                       (after :facts (if @system (stop @system)))
+;                       ]
 ;
-;                        (fact "Test run etl service"
-;                              (send-test-messages @system topic message-count)
-;                              (info "waiting on first etl message")
-;                              ;here we need to wait for files written
-;                              (Thread/sleep 10000)))))
+;                      (fact "Test run etl service"
+;                            (send-test-messages @system topic message-count)
+;                            (info "waiting on first etl message")
+;                            ;here we need to wait for files written
+;                            (Thread/sleep 10000))))

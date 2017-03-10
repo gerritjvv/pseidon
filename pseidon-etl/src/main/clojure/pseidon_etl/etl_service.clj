@@ -147,15 +147,25 @@
                      (doseq [msg (.getMessages pmsg)]
                        (writer/multi-write writer-ctx msg))))))
 
+(defn transform-kv
+  "Transform the keys and the values with f"
+  [f m]
+  (reduce-kv #(assoc %1 (f %2) (f %3)) {} m))
+
 (defn ^Map default-plugins
   "Create the default plugins that are available to the :plugins pipeline"
   [state]
   {"disk-writer" (disk-writer-plugin state)})
 
-(defn read-plugin-pipeline [state {:keys [plugins] :as conf}]
+(defn read-plugin-pipeline
+  "
+  Read the pluging pipeline from the config :plugins {}
+  If none is supplied a default pipeline of {:plugins {disk-writer ... :pipeline (-> disk-writer) }} is used
+  "
+  [state {:keys [plugins] :as conf}]
 
   (if plugins
-    (PipelineParser/parse (Context/instance ^Map conf (default-plugins state)) (reduce-kv #(assoc %1 (name %2) (name %3)) {} conf))
+    (PipelineParser/parse (Context/instance ^Map conf (default-plugins state)) (transform-kv name plugins))
     (PipelineParser/parse (Context/instance ^Map conf (default-plugins state)) {:pipeline '(-> disk-writer)})))
 
 (defrecord ETLService [conf db topic-service kafka-node kafka-client writer-service monitor-service]

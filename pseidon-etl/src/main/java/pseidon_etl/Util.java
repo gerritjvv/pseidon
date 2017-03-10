@@ -4,14 +4,10 @@ import clojure.lang.Counted;
 import clojure.lang.IFn;
 import clojure.lang.ISeq;
 import org.apache.commons.lang3.StringUtils;
-import pseidon.plugin.AbstractBatchedPlugin;
-import pseidon.plugin.PMessage;
 import pseidon.plugin.Plugin;
 
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.util.Collection;
-import java.util.concurrent.TimeUnit;
 
 /**
  * Utility functions
