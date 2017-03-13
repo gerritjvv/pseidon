@@ -125,12 +125,16 @@
   component/Lifecycle
 
   (start [component]
+    (prn "TOPIC SERVICE1")
+
     (info "Starting Topic Service")
     (try
       (do
         ;;run update topics once
+
         (update-topics! conf (:writer-ctx writer-service) (:database component) (:kafka-node component))
 
+        (prn "TOPIC SERVICE2")
         (let [freq (get conf :topic-refresh-freq-ms 10000)
               delay-service (fixdelay-thread freq (update-topics! conf (:writer-ctx writer-service) (:database component) (:kafka-node component)))]
 
