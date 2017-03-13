@@ -284,6 +284,9 @@
     (dissoc component :writer-ctx)))
 
 
+(defn base-dir [writer-service]
+  (:base-dir writer-service))
+
 (defn writer-service [conf]
   (->WriterService conf nil nil nil))
 

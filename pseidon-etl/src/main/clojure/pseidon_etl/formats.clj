@@ -25,6 +25,8 @@
                       allowed values: any character or \"byte1\" for byte one, \"tab\", \"space\"
                       ts=<timestamp column index> the index in the message at which the timestamp can be found
 
+                      e.g txt:sep=tab;ts=0  will look for tab separated messages where the timestamp in millis is at index 0
+
             bts->msg => FormatMsg { ts bts msg:Vector}
 
            Format avro

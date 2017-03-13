@@ -1,0 +1,31 @@
+<settings xmlns="http://maven.apache.org/SETTINGS/1.0.0">
+
+    <profiles>
+        <profile>
+            <id>default</id>
+            <repositories>
+                <repository>
+                    <id>mvn</id>
+                    <url>http://central.maven.org/maven2/</url>
+                </repository>
+                <repository>
+                    <id>cloudera</id>
+                    <url>https://repository.cloudera.com/artifactory/cloudera-repos/</url>
+                </repository>
+                <repository>
+                    <id>confluent</id>
+                    <url>http://packages.confluent.io/maven/</url>
+                </repository>
+                <repository>
+                    <id>clojars.org</id>
+                    <url>http://clojars.org/repo</url>
+                </repository>
+            </repositories>
+        </profile>
+    </profiles>
+    <activeProfiles>
+        <activeProfile>default</activeProfile>
+    </activeProfiles>
+
+
+</settings>

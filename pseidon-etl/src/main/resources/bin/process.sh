@@ -74,4 +74,6 @@ CLASSPATH=$CONF_DIR:$CONF_DIR/META-INF:$CLASSPATH
 
 #profiling  -agentpath:/opt/yjp-2013-build-13048/bin/linux-x86-64/libyjpagent.so=port=8183,alloceach=1000,usedmem=90,onexit=memory,sampling
 
+echo $JAVA -server $JAVA_GC $JAVA_HEAP $JAVA_OPTS -classpath "$CLASSPATH" $CLIENT_CLASS $@
+
 $JAVA -server $JAVA_GC $JAVA_HEAP $JAVA_OPTS -classpath "$CLASSPATH" $CLIENT_CLASS $@

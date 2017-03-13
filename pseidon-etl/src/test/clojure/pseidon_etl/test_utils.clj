@@ -22,6 +22,8 @@
     [clojure.string :as cljstr]
     [pseidon-etl.writer :as writer]))
 
+(defonce default-etl-group "etl")
+
 (defn retry [sleep-ms timeout-ms f]
   (let [ts (System/currentTimeMillis)]
 
@@ -97,7 +99,7 @@
 
 
 (defn create-topics [resources & topics]
-  (-> resources :kafka :kafka (.createTopics topics)))
+  (-> resources :kafka :kafka (.createTopics ^EmbeddedKafkaCluster topics)))
 
 (defn startup-resources [& topics]
   (let [res {:kafka (startup-kafka)
@@ -160,12 +162,14 @@
    :redis-conf        {:host       "localhost"
                        :port       (int (get-in state [:redis :port]))
                        :max-active 5 :timeout 1000 :group-name (str (System/currentTimeMillis))}
-   :conf              {:use-earliest        true
+   :conf              {:etl-group default-etl-group
+                       :use-earliest        true
                        :work-calculate-freq 200}})
 
 (defn create-test-kafka-node-service
   "Must be called with what startup-resources returns"
   [state topics]
+  (apply create-topics state topics)
   (create-kafka-node-service
     (create-kafka-node-service-test-conf state)
     topics))
@@ -176,10 +180,25 @@
   [db-service]
   (db/with-connection db-service
                       (j/do-commands
-                        "DROP TABLE IF EXISTS kafka_logs"
-                        "CREATE TABLE IF NOT EXISTS kafka_logs (log VARCHAR(20), type VARCHAR(10), log_group VARCHAR(10), enabled INTEGER)"
-                        "DROP TABLE IF EXISTS kafka_formats"
-                        "CREATE TABLE IF NOT EXISTS kafka_formats (log VARCHAR(20), format VARCHAR(10), output_format VARCHAR(10), hive_table_name VARCHAR(100), hive_url VARCHAR(100), hive_user VARCHAR(100), hive_pwd VARCHAR(100))")))
+                        "DROP TABLE IF EXISTS pseidon_logs"
+                        "CREATE TABLE IF NOT EXISTS pseidon_logs (
+                            log varchar(100) NOT NULL,
+                            format varchar(200) DEFAULT NULL,
+                            output_format varchar(200) DEFAULT NULL,
+                            base_partition varchar(200) DEFAULT NULL,
+                            log_partition varchar(200) DEFAULT NULL,
+                            hive_table_name varchar(200) DEFAULT NULL,
+                            hive_url varchar(255),
+                            hive_user varchar(200) DEFAULT NULL,
+                            hive_password varchar(200) DEFAULT NULL,
+                            quarantine varchar(200),
+                            date_format varchar(200),
+                            log_group varchar(100),
+                            enabled boolean DEFAULT 1,
+                            PRIMARY KEY (log))"
+
+
+                        )))
 
 
 (defn create-test-database
@@ -199,8 +218,19 @@
 
 (defn with-test-etl-service
   "Runs the function within a application context where services are test services
-   f is called as (f app)"
+   f is called as (f app)
+
+   topic are created but not added to :kafka-node-service for consumption
+
+   Custom services:
+     writer-service -> normal writer service but with :rollover-abs-timeout 5000
+     kafka-node-service -> test service
+     kafka-consume-service -> test service
+     nrepls-service -> noop nrepl service
+     db-service -> embedded db service with tables created"
+
   [topics f]
+  {:pre [(coll? topics) (fn? f)]}
   (let [resources (startup-resources)
 
         ;;;setup test inmemory db with tables created
@@ -213,14 +243,17 @@
         app-resources (app/create-app-components
                         {}
                         ;;service overrides
-                        {:db-service           db-service
+                        {:writer-service      (writer/writer-service {:rollover-abs-timeout 5000})
+                         :db-service           db-service
                          :kafka-node-service   kafka-node-service
                          :kafka-client-service kafka-client-service
                          :nrepl-service        (pseidon-etl.nrepl-service/create-noop-nrepl-service)})]
 
     (try
+      (prn "CALLING Test function " f)
       (f app-resources)
       (finally
+        (prn "STOP COMPNENTS")
         (app/stop-app-components app-resources)))))
 
 

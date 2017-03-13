@@ -1,0 +1,15 @@
+{
+
+ :kafka-brokers      [{:host "{brk1}" :port 9092}
+                      {:host "{brk2}" :port 9092}
+                      {:host "{brk3}" :port 9092}]
+
+ :kafka-use-earliest true
+ :redis-conf         {:host "{redis}" :port 6379 :max-active 10 :timeout 1000}
+ :etl-db-host        "//localhost:3306/testdb"
+ :etl-db-user        "pseidon"
+ :etl-db-pwd         "pseidon"
+
+ ;;:jaas "path to jaas file"
+ :etl-group "etl" ;;log_group used in mysql pseidon-logs, and also used to isolate redis kafka offsets
+ }

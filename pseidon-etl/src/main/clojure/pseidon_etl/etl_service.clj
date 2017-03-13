@@ -118,7 +118,7 @@
           (catch InterruptedException _ (-> (Thread/currentThread) (.interrupt)))
           (catch Exception e (error e e))
           (finally
-            (info "Exit etl publisher")))))))
+            ))))))
 
 (defn- shutdown-all [component]
   (util/wait-zero-activity! "etl" (get-in component [:etl-service :activity-counter]))
@@ -147,10 +147,10 @@
                      (doseq [msg (.getMessages pmsg)]
                        (writer/multi-write writer-ctx msg))))))
 
-(defn transform-kv
-  "Transform the keys and the values with f"
+(defn transform-ks
+  "Transform the keys with f"
   [f m]
-  (reduce-kv #(assoc %1 (f %2) (f %3)) {} m))
+  (reduce-kv #(assoc %1 (f %2) %3) {} m))
 
 (defn ^Map default-plugins
   "Create the default plugins that are available to the :plugins pipeline"
@@ -165,8 +165,8 @@
   [state {:keys [plugins] :as conf}]
 
   (if plugins
-    (PipelineParser/parse (Context/instance ^Map conf (default-plugins state)) (transform-kv name plugins))
-    (PipelineParser/parse (Context/instance ^Map conf (default-plugins state)) {:pipeline '(-> disk-writer)})))
+    (PipelineParser/parse (Context/instance ^Map conf (default-plugins state)) (transform-ks name plugins))
+    (PipelineParser/parse (Context/instance ^Map conf (default-plugins state)) (transform-ks name {:pipeline '(-> disk-writer)}))))
 
 (defrecord ETLService [conf db topic-service kafka-node kafka-client writer-service monitor-service]
   component/Lifecycle

@@ -16,4 +16,14 @@
         <module>pseidon-plugin</module>
     </modules>
 
+    <profiles>
+        <profile>
+            <id>etl</id>
+            <modules>
+                <module>pseidon-plugin</module>
+                <module>pseidon-etl</module>
+            </modules>
+        </profile>
+    </profiles>
+
 </project>
