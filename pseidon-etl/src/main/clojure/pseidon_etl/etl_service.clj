@@ -81,6 +81,7 @@
 
         msgs2 (map (fn [{:keys [topic bts]}]
                      (let [format (topic-service/get-format topic format-state conf db)
+                           _ (do (info ">>>>>>>>>> pseidon-etl-serivice format " format "type " (type format)))
                            msg-map (formats/bts->msg conf topic format bts)]
 
                        (wrap-msg state

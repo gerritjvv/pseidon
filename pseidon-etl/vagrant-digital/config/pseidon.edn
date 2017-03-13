@@ -10,6 +10,17 @@
  :etl-db-user        "pseidon"
  :etl-db-pwd         "pseidon"
 
+ :data-dir           "{datadir}"
+
+ :consume-step       100000
+
+  :writer            {
+
+                      :out-buffer-size 10000
+                      :codec :gzip
+                      :rollover-timeout 1000                ; for testing rollover every 10 seconds
+                      :rollover-abs-timeout 10000           ; for testing rollover every 10 seconds
+                      }
  ;;:jaas "path to jaas file"
  :etl-group "etl" ;;log_group used in mysql pseidon-logs, and also used to isolate redis kafka offsets
  }

@@ -7,6 +7,7 @@ function install_mvn {
     echo "installing maven"
     sudo apt-get install -y maven
 
+    mkdir -p ~/.m2
     touch ~/.m2/settings.xml
     cat /vagrant/pseidon-etl/vagrant-digital/config/mvn-settings.xml > ~/.m2/settings.xml
 
@@ -47,8 +48,17 @@ function deploy_pseidon {
   #install the debian package
   find -L /vagrant/pseidon-etl/target -iname "*.deb" | xargs dpkg -i || exit -1
 
+  DATADIR="/var/log/pseidondata"
+  RETRY_CACHE="/tmp/kafka-retry-cache"
+
+  mkdir -p $DATADIR
+  chown -R pseidon:pseidon $DATADIR
+
+  # for retry cache ensure that tmp has read write permissions for all
+  chmod -R a+rw /tmp/
 
   sed "s;{redis};${SRV1};g" /vagrant/pseidon-etl/vagrant-digital/config/pseidon.edn |\
+   sed "s;{datadir};${DATADIR};g" |\
    sed "s;{brk1};${BRK1};g" |\
    sed "s;{brk2};${BRK2};g" |\
    sed "s;{brk3};${BRK3};g" \
@@ -71,7 +81,7 @@ BRK3=$4
 
 
 
-#install_mvn
-#install_mysql
+install_mvn
+install_mysql
 
 deploy_pseidon $SRV1 $BRK1 $BRK2 $BRK3

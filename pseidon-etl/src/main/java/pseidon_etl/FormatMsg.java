@@ -88,7 +88,7 @@ public class FormatMsg extends PersistentArrayMap{
     /**
      * (defrecord Format [^String type ^Map props])
      */
-    public static class Format{
+    public static class Format extends PersistentArrayMap{
 
         private final String type;
         private final Map<?, ?> props;
@@ -98,6 +98,23 @@ public class FormatMsg extends PersistentArrayMap{
             this.type = type;
             this.props = props;
         }
+
+        @Override
+        public Object valAt(Object key) {
+            if(key instanceof Keyword){
+                switch (((Keyword)key).getName()){
+                    case "props":
+                        return getProps();
+                    case "type":
+                        return getType();
+                    default:
+                        return super.get(key);
+                }
+            }
+            else
+                return super.get(key);
+        }
+
 
         public String getType() {
             return type;
