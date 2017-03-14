@@ -32,6 +32,6 @@ vagrant ssh broker1 -c "/usr/local/kafka_2.10-0.10.1.0/bin/kafka-topics.sh --zoo
 
 echo "Running mvn run send on client $BRK1,$BRK2,$BRK3 $TOPIC $THREADS $COUNT_PER_THREAD"
 
-vagrant ssh client -c "cd /vagrant/pseidon-etl; mvn clojure:run -Dclojure.mainClass=pseidon_etl.pseidon_etl -Dclojure.args=\"send $BRK1,$BRK2,$BRK3 $TOPIC $THREADS $COUNT_PER_THREAD\""
+vagrant ssh client -c "cd /vagrant/pseidon-etl; mvn clojure:run -Dclojure.mainClass=pseidon_etl.pseidon_etl -Dclojure.args=\"send $BRK1,$BRK2,$BRK3 $TOPIC $THREADS $COUNT_PER_THREAD\" && sleep 10s"
 
 echo "done"

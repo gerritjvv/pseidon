@@ -27,8 +27,8 @@
 
 (deftype WriterMetricsKey [node topic file-name])
 
-(defn ^TopicMsg ->TopicMsg [^String topic ^FormatMsg msg ^String codec]
-  (TopicMsg. topic codec msg))
+(defn ^TopicMsg ->TopicMsg [topic ^FormatMsg msg codec]
+  (TopicMsg. (name topic) (name codec) msg))
 
 (defn ^TopicMsg wrap-msg
   "topic:
@@ -76,7 +76,6 @@
                   (get-local-dt-hr-str ts)))))
   ([{:keys [topic msg]}]
     ;; msg must be of type formats/FormatMsg
-    (prn "############################see message " msg)
    (msg->topic-datehr topic (:ts msg))))
 
 (defn- ^"[B" str->bts [^String s]
@@ -98,7 +97,7 @@
   [conf {:keys [writer-ctx flush-on-write]} k msgs]
 
 
-  (let [codec (:codec (first msgs))
+  (let [codec (keyword (:codec (first msgs)))
         ctx (if codec (assoc-in writer-ctx [:ctx :conf :codec] codec) writer-ctx)]
 
     (cond
@@ -127,7 +126,7 @@
                   bts (formats/msg->bts conf
                                         (:topic topic-msg)
                                         (:format format-msg)
-                                        (:msg format-msg))]
+                                        format-msg)]
 
               (.write out ^"[B" bts)
               (.write out new-line-bts)))

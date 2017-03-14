@@ -107,6 +107,7 @@
        "valid formats are determined by the pseidon-etl.formats namespace and multimethod implementations"
        [log state-a conf db]
        (let [format (formats/parse-format (or (:format (get-topic-meta log db)) "txt"))]
+
          (formats/format-descriptor state-a conf format)))
 
 (defn

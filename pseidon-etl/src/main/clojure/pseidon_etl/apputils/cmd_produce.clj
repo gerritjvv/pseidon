@@ -5,16 +5,11 @@
             [pseidon-etl.apputils.util :as app-util]
             [fun-utils.threads :as fn-threads])
   (:import (java.util.concurrent ExecutorService Executors TimeUnit)
-           (org.apache.avro Schema$Parser Schema)
-           (org.apache.avro.generic GenericData$Record)
            (pseidon_etl AvroSerializer)))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;; private functions
-
-(defonce ^Schema avro-schema (.parse (Schema$Parser.)
-                                     "{\"name\": \"test\", \"type\": \"record\", \"fields\":[ {\"name\": \"ts\", \"type\": \"long\"}, {\"name\": \"data\", \"type\": \"string\"} ]}"))
 
 (defn mean [coll]
   (let [sum (apply + coll)
@@ -30,14 +25,10 @@
   [len]
   (apply str (take len (repeatedly #(char (+ (rand 26) 65))))))
 
-(defn ^"[B" generate-test-message []
-  (AvroSerializer/serialize
-    avro-schema
-    (doto
-      (GenericData$Record. avro-schema)
-      (.put 0 (System/currentTimeMillis))
-      (.put 1 (rand-str 100)))))
 
+(defn ^"[B" generate-test-message []
+  (.getBytes
+    (str (System/currentTimeMillis) \tab (rand-str 100))))
 
 (defn update-message-stats! [messages-stats start-ts count-per-thread]
   (let [time (- (System/currentTimeMillis) (long start-ts))]

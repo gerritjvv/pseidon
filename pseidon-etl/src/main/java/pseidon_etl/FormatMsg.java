@@ -1,5 +1,7 @@
 package pseidon_etl;
 
+import clojure.lang.APersistentMap;
+import clojure.lang.IPersistentMap;
 import clojure.lang.Keyword;
 import clojure.lang.PersistentArrayMap;
 
@@ -14,7 +16,7 @@ public class FormatMsg extends PersistentArrayMap{
     /**
      *The input format that was used to read the message and deserialize it to a Map object, e.g avro
      */
-    private final Format format;
+    private final IPersistentMap format;
     /**
      * The message timestamp, extracted as per the format
      */
@@ -29,7 +31,7 @@ public class FormatMsg extends PersistentArrayMap{
      */
     private final Object msg;
 
-    public FormatMsg(Format format, long ts, byte[] bts, Object msg) {
+    public FormatMsg(IPersistentMap format, long ts, byte[] bts, Object msg) {
         this.format = format;
         this.ts = ts;
         this.bts = bts;
@@ -56,7 +58,10 @@ public class FormatMsg extends PersistentArrayMap{
             return super.get(key);
     }
 
-    public Format getFormat() {
+    /**
+     * Keys props:Map, type:String
+     */
+    public IPersistentMap getFormat() {
         return format;
     }
 
@@ -83,53 +88,5 @@ public class FormatMsg extends PersistentArrayMap{
                 ", bts=" + Arrays.toString(bts) +
                 ", msg=" + msg +
                 '}';
-    }
-
-    /**
-     * (defrecord Format [^String type ^Map props])
-     */
-    public static class Format extends PersistentArrayMap{
-
-        private final String type;
-        private final Map<?, ?> props;
-
-
-        public Format(String type, Map<?, ?> props) {
-            this.type = type;
-            this.props = props;
-        }
-
-        @Override
-        public Object valAt(Object key) {
-            if(key instanceof Keyword){
-                switch (((Keyword)key).getName()){
-                    case "props":
-                        return getProps();
-                    case "type":
-                        return getType();
-                    default:
-                        return super.get(key);
-                }
-            }
-            else
-                return super.get(key);
-        }
-
-
-        public String getType() {
-            return type;
-        }
-
-        public Map<?, ?> getProps() {
-            return props;
-        }
-
-        @Override
-        public String toString() {
-            return "Format{" +
-                    "type='" + type + '\'' +
-                    ", props=" + props +
-                    '}';
-        }
     }
 }

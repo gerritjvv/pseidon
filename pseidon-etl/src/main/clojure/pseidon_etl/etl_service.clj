@@ -81,7 +81,6 @@
 
         msgs2 (map (fn [{:keys [topic bts]}]
                      (let [format (topic-service/get-format topic format-state conf db)
-                           _ (do (info ">>>>>>>>>> pseidon-etl-serivice format " format "type " (type format)))
                            msg-map (formats/bts->msg conf topic format bts)]
 
                        (wrap-msg state
@@ -104,22 +103,29 @@
   "Read messages from kafka and sends it to the pool
    See exec-write"
   [{:keys [node]} pool topic-status]
-  (let [^AtomicLong counter (AtomicLong. 0)]
+  (let [^AtomicLong counter (AtomicLong. 0)
+        ^AtomicLong counter1 (AtomicLong. 0)]
     (fn []
-      (while (not (Thread/interrupted))
-        ;loop forever till interrupted
-        (try
-          (loop [msg (read-msg! node)]
-            (when (and (not msg) (not (pos? (.get counter))))
-              (.incrementAndGet counter))
+      (let [buff-ch (buffered-msgs node 10000 500)
+            get-msg #(async/<!! buff-ch)]
 
-            (when msg
-              (load/publish! pool msg)
-              (recur (read-msg! node))))
-          (catch InterruptedException _ (-> (Thread/currentThread) (.interrupt)))
-          (catch Exception e (error e e))
-          (finally
-            ))))))
+        (while (not (Thread/interrupted))
+          ;loop forever till interrupted
+          (try
+            (loop [msg (get-msg)]
+
+              (info "counter: " (.incrementAndGet counter1))
+
+              (when (and (not msg) (not (pos? (.get counter))))
+                (.incrementAndGet counter))
+
+              (when msg
+                (load/publish! pool msg)
+                (recur (get-msg))))
+            (catch InterruptedException _ (-> (Thread/currentThread) (.interrupt)))
+            (catch Exception e (error e e))
+            (finally
+              )))))))
 
 (defn- shutdown-all [component]
   (util/wait-zero-activity! "etl" (get-in component [:etl-service :activity-counter]))
@@ -262,8 +268,7 @@
               pool
               (default-init state)
               exec-f
-              default-terminate
-              :bulk consumer-batch-size))
+              default-terminate))
 
           (.submit exec-service publisher-f)
           (assoc component :etl-service {:pool                    pool

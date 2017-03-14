@@ -101,7 +101,6 @@
   "   stop config-file
     or config-file ;; is start"
   [& args]
-  (prn "IN MAIN 1" args)
 
   (let [cmd (first args)]
     (cond
@@ -126,19 +125,14 @@
         (catch Exception _ nil))
       :else
       (do
-        (prn "IN MAIN 2")
         (init args)
-        (prn "IN MAIN 3")
 
         (add-shutdown-hook)
         (add-uncaught-exceptionhandler!)
-        (prn "IN MAIN 4")
 
         (start)
-        (prn "IN MAIN 5")
 
         (while (not (Thread/interrupted))
-          (prn "IN MAIN 6")
           (Thread/sleep 1000))
         (System/exit 0)))))
 

@@ -89,10 +89,10 @@
 
 
 (defmethod formats/msg->string "avro" [conf topic format format-msg]
-  (str format-msg))
+  (String. ^"[B" (:bts format-msg)))
 
 (defmethod formats/msg->bts "avro" [conf topic format format-msg]
-  (.getBytes (str format-msg) "UTF-8"))
+  (:bts format-msg))
 
 (defmethod formats/bts->msg "avro" [conf topic format ^"[B" bts]
   (let [ts-parser (:ts-parser format)
