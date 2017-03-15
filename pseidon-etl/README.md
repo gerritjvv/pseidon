@@ -18,6 +18,7 @@ The pseidon-etl uses the following tables:
 <tr><td>:etl-db-user</td><td>"pseidon"</td><td>mysql db user name</td></tr>
 <tr><td>:etl-db-pwd</td><td>"pseidon"</td><td>mysql db password</td></tr>
 <tr><td>:etl-group</td><td>"etl"</td><td>The sub group for this etl machine, which si used in the log_group="$group" query above</td></tr>
+<tr><td>:avro-schema-registry-url</td><td>For record with format avro a schema registry is required</td></tr>
 </table>
 
 
@@ -41,6 +42,24 @@ The input message is
 or in Java
 
 ```
+package pseidon_etl;
+
+class TopicMsg {
+  String topic;
+  String codec;
+  FormatMsg msg;
+}
+
+
+
+//The contents of this message depends on the configured in the pseidon_logs table.
+
+class FormatMsg {
+  long ts; //timestamp in millis extracte from the message
+  byte[] bts; //the original message bytes
+  Object msg; //the message extracted from format e.g for avro IndexedRecord
+}
+
 ```
 
 The default pipeline is:

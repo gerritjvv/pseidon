@@ -58,7 +58,11 @@ function deploy_pseidon {
   chmod -R a+rw /tmp/
 
   sed "s;{redis};${SRV1};g" /vagrant/pseidon-etl/vagrant-digital/config/pseidon.edn |\
+
    sed "s;{datadir};${DATADIR};g" |\
+
+   sed "s;{schemaregistry};${SRV1};g" |\
+
    sed "s;{brk1};${BRK1};g" |\
    sed "s;{brk2};${BRK2};g" |\
    sed "s;{brk3};${BRK3};g" \

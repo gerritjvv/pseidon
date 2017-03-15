@@ -16,6 +16,7 @@ import java.io.IOException;
 public class AvroSerializer {
 
     public static final byte[] serialize(Schema schema, GenericRecord record){
+
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         DatumWriter<GenericRecord> writer = new GenericDatumWriter<>(schema);
         Encoder encoder = EncoderFactory.get().binaryEncoder(out, null);

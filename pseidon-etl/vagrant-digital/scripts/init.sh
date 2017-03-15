@@ -1,6 +1,6 @@
 #!/bin/bash
 ########################################################################
-################# Install Java and Kafka locally  ######################
+################# Install Java                    ######################
 #################  called from Vagrantfile        ######################
 ########################################################################
 
@@ -9,6 +9,10 @@
 
 ## from http://serverfault.com/questions/500764/dpkg-reconfigure-unable-to-re-open-stdin-no-file-or-directory
 export DEBIAN_FRONTEND=noninteractive
+
+
+KAFKA="$1"
+
 
 ## Install java
 ### From https://rais.wordpress.com/2015/03/16/setting-up-a-vagrant-java-8-environment/
@@ -40,44 +44,8 @@ if ! grep -q -F 'JAVA_HOME' /etc/profile.d/java.sh; then
 fi
 
 
-### Install Kafka
-
-#KAFKA_DOWNLOAD="http://apache.uvigo.es/kafka/0.9.0.0/kafka_2.10-0.9.0.0.tgz"
-#KAFKA_FILE="kafka_2.10-0.9.0.0.tgz"
-#KAFKA_DIR="/usr/local/kafka_2.10-0.9.0.0"
-
-KAFKA_DOWNLOAD="http://apache.rediris.es/kafka/0.10.1.0/kafka_2.10-0.10.1.0.tgz"
-KAFKA_FILE="kafka_2.10-0.10.1.0.tgz"
-KAFKA_DIR="/usr/local/kafka_2.10-0.10.1.0"
-KAFKA_DATA_DIR="/data/kafka-logs"
-
-#ensure vagrant/rpm exists
-mkdir -p /vagrant/rpm
-
-
-if [ ! -f /vagrant/rpm/$KAFKA_FILE ]; then
-    echo Downloading kafka...
-    wget --no-check-certificate $KAFKA_DOWNLOAD -O "/vagrant/rpm/$KAFKA_FILE"
-fi
-
-if [ ! -d "$KAFKA_DATA_DIR" ]; then
-   mkdir -p "$KAFKA_DATA_DIR"
-   chmod -R 777 "$KAFKA_DATA_DIR"
-fi
-
-if [ ! -d "$KAFKA_DIR" ]; then
-    ln -s $JAVA_HOME/bin/jps /usr/bin/jps
-
-    cp -R /vagrant/rpm/$KAFKA_FILE /usr/local/
-    cd /usr/local
-    tar -xzf $KAFKA_FILE
-    echo "export KAFKA_HOME=$KAFKA_DIR" >> /etc/profile.d/kafka.sh
-fi
-
 . /etc/profile.d/java.sh
-. /etc/profile.d/kafka.sh
 
 echo "JAVA_HOME=$JAVA_HOME"
-echo "KAFKA_HOME=$KAFKA_HOME"
 
-echo done installing jdk and kafka
+echo done installing jdk

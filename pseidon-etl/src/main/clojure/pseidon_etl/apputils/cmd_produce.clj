@@ -1,11 +1,19 @@
 (ns
-  ^{:doc "App produce command"}
+  ^{:doc "App produce command
+
+          Sends avro messages of type {ts:long, data:string}"}
   pseidon-etl.apputils.cmd-produce
   (:require [kafka-clj.client :as client]
             [pseidon-etl.apputils.util :as app-util]
-            [fun-utils.threads :as fn-threads])
+            [fun-utils.threads :as fn-threads]
+            [pseidon-etl.avro.avro-format :as avro-format])
   (:import (java.util.concurrent ExecutorService Executors TimeUnit)
-           (pseidon_etl AvroSerializer)))
+           (pseidon_etl AvroSerializer)
+           (org.apache.avro Schema$Parser Schema)
+           (org.apache.avro.generic IndexedRecord GenericRecord GenericData GenericData$Record)
+           (io.confluent.kafka.schemaregistry.client SchemaRegistryClient CachedSchemaRegistryClient)
+           (io.confluent.kafka.serializers KafkaAvroEncoder KafkaAvroSerializer)
+           (org.apache.kafka.common.serialization Serializer)))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -26,26 +34,42 @@
   (apply str (take len (repeatedly #(char (+ (rand 26) 65))))))
 
 
-(defn ^"[B" generate-test-message []
-  (.getBytes
-    (str (System/currentTimeMillis) \tab (rand-str 100))))
+(def ^Schema TEST-MSG-SCHEMA (.parse (Schema$Parser.) (str "
+
+  {
+    \"type\" : \"record\",
+    \"namespace\": \"Test\",
+    \"name\" : \"TestMessage\",
+    \"fields\": [
+       {\"name\": \"ts\", \"type\" : \"long\"},
+       {\"name\": \"data\", \"type\": \"string\"}
+     ]
+  }
+")))
+
+
+
+(defn ^"[B" generate-test-message [encoder topic]
+  (encoder (str topic) (doto
+                         (GenericData$Record. TEST-MSG-SCHEMA)
+                         (.put 0 (System/currentTimeMillis))
+                         (.put 1 (rand-str 100)))))
 
 (defn update-message-stats! [messages-stats start-ts count-per-thread]
   (let [time (- (System/currentTimeMillis) (long start-ts))]
     (swap! messages-stats (fn [m] (merge-with concat m {:times [time] :totals [count-per-thread]})))))
 
-
 (defn send-test-data
   "
   brokers : [{:host :port} ... ]
   "
-  [threads count-per-thread topic brokers conf]
+  [schema-registry threads count-per-thread topic brokers conf]
   (let [conn (client/create-connector brokers (apply array-map conf))
         ^ExecutorService exec (Executors/newFixedThreadPool (int threads))
         errors-a (atom 0)
 
         messages-stats (atom {:times [] :totals []})        ;;times: []
-
+        encoder (avro-format/encoder (avro-format/create-client-reg {:avro-schema-registry-url schema-registry}))
         ]
     (try
       (dotimes [_ threads]
@@ -58,7 +82,7 @@
                                           last-seen-ts (atom (System/currentTimeMillis))]
 
                                       (dotimes [i count-per-thread]
-                                        (client/send-msg conn topic (generate-test-message))
+                                        (client/send-msg conn topic (generate-test-message encoder topic))
 
                                         (when (zero? (rem i k))
                                           (let [ts (- (System/currentTimeMillis) @last-seen-ts)]
@@ -91,13 +115,25 @@
 ;;;;; public functions
 
 
+(defn push-schema
+  "Send the test schema to the schema registry"
+  [topic schema-registry-url]
+
+  (let [id (.register (CachedSchemaRegistryClient. (str schema-registry-url) (int 100))
+                      (str topic)
+                      TEST-MSG-SCHEMA)]
+
+    (prn "Registered " TEST-MSG-SCHEMA " for topic " topic " under id " id)))
+
 (defn send-data
   "{:message-stats {:times [] :totals []} :errors num}"
-  [threads count-per-thread topic brokers conf]
+  [schema-registry threads count-per-thread topic brokers conf]
   (let [
+        _ (push-schema topic schema-registry)
+
         thread-int (as-int threads)
         count-per-thread-int (as-int count-per-thread)
-        stats (send-test-data thread-int count-per-thread-int topic (app-util/format-brokers (clojure.string/split brokers #"[,;]")) conf)
+        stats (send-test-data schema-registry thread-int count-per-thread-int topic (app-util/format-brokers (clojure.string/split brokers #"[,;]")) conf)
 
         errors (get stats :errors)
         times (get-in stats [:message-stats :times])

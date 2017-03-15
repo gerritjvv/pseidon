@@ -5,7 +5,7 @@
   cmd <send|consume>
 
   send:  send test json data to kafka
-         send <broker-list> <threads> <num-of-records-per-thread>
+         send <schema-registry-url> <broker-list> <threads> <num-of-records-per-thread>
 
   consume: consume data from topics in kafka on a unique group and from the beginning
            used for performance and stability testing
@@ -91,8 +91,8 @@
 (defn consume [brokers redis-host topic]
   (cmd-consume/consume-data topic brokers redis-host))
 
-(defn send-msgs [brokers topic threads count-per-thread & conf]
-  (cmd-produce/send-data threads count-per-thread topic brokers (apply array-map conf)))
+(defn send-msgs [schema-registry-url brokers topic threads count-per-thread & conf]
+  (cmd-produce/send-data schema-registry-url threads count-per-thread topic brokers (apply array-map conf)))
 
 (defn work-queue [& args]
   (cmd-work-queue/read-redis-queue args))

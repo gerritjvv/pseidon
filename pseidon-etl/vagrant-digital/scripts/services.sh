@@ -3,7 +3,6 @@
 ### These:
 ###   redis
 
-
 # install redis
 echo "Installing redis"
 
@@ -49,5 +48,4 @@ TYPE="$1"
 
  cp /vagrant/config/redis.conf /etc/
  /etc/init.d/redis restart
-
 

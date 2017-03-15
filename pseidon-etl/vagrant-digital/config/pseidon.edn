@@ -21,6 +21,10 @@
                       :rollover-timeout 1000                ; for testing rollover every 10 seconds
                       :rollover-abs-timeout 10000           ; for testing rollover every 10 seconds
                       }
+
+ ;; for messages with avro format in the db table pseidon_logs we require an avro schema registry
+ :avro-schema-registry-url "{schemaregistry}"
+
  ;;:jaas "path to jaas file"
  :etl-group "etl" ;;log_group used in mysql pseidon-logs, and also used to isolate redis kafka offsets
  }

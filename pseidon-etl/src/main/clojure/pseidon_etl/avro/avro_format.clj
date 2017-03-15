@@ -34,6 +34,10 @@
     (fn [topic record]
       (.deserialize des (str topic) (bytes record)))))
 
+(defn format-url [^String url]
+  (let [url1 (if (.startsWith url "http") url (str "http://" url))
+        url2 (if (.contains url ":") url1 (str url1 ":8081"))]
+    url2))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;; formats multi method impls
 
@@ -42,7 +46,7 @@
         max-entries (:avro-schema-registry-max-schemas conf REGISTRY-CLIENT-MAX-ENTRIES)]
     (info "Creating Avro SchemaRegistryClient with " url " identityMapCapacity " max-entries)
 
-    (CachedSchemaRegistryClient. url (int max-entries))))
+    (CachedSchemaRegistryClient. (str (format-url url))  (int max-entries))))
 
 (defmethod formats/format-descriptor "avro" [state-a conf format]
 
