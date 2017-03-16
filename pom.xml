@@ -26,4 +26,14 @@
         </profile>
     </profiles>
 
+   <distributionManagement>
+  	<snapshotRepository>
+    	<id>dmp-snapshots</id>
+    	<url>http://nexus.int.scdmp.net/repository/dmp-snapshots</url>
+    </snapshotRepository>
+	<repository>
+    	<id>dmp-releases</id>
+    	<url>http://nexus.int.scdmp.net/repository/dmp-releases</url>
+    </repository>
+  </distributionManagement>
 </project>
