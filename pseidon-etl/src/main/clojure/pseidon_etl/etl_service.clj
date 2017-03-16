@@ -103,8 +103,7 @@
   "Read messages from kafka and sends it to the pool
    See exec-write"
   [{:keys [node]} pool topic-status]
-  (let [^AtomicLong counter (AtomicLong. 0)
-        ^AtomicLong counter1 (AtomicLong. 0)]
+  (let [^AtomicLong counter (AtomicLong. 0)]
     (fn []
       (let [buff-ch (buffered-msgs node 10000 500)
             get-msg #(async/<!! buff-ch)]
@@ -113,8 +112,6 @@
           ;loop forever till interrupted
           (try
             (loop [msg (get-msg)]
-
-              (info "counter: " (.incrementAndGet counter1))
 
               (when (and (not msg) (not (pos? (.get counter))))
                 (.incrementAndGet counter))
