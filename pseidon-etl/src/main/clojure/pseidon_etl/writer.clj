@@ -3,6 +3,7 @@
     [pseidon-etl.util :as util]
     [fileape.core :as ape-core]
     [fileape.parquet.writer :as ape-parquet-writer]
+    [fileape.avro.writer :as ape-avro-writer]
     [clojure.tools.logging :refer [error warn info debug fatal]]
     [fun-utils.core :as futils]
     [clj-time.coerce :as time-c]
@@ -101,6 +102,18 @@
         ctx (if codec (assoc-in writer-ctx [:ctx :conf :codec] codec) writer-ctx)]
 
     (cond
+      (= codec :avro)
+      (ape-core/write-timeout
+        ctx k
+        (fn [{:keys [avro]}]
+          (doseq [topic-msg msgs]
+            (try
+              (ape-avro-writer/write! avro (:msg topic-msg))
+              (catch Exception e (do
+                                   (error e (clj-json/generate-string {:topic (:topic topic-msg)
+                                                                       :e     (str e)})))))))
+        600000)
+
       (= codec :parquet)
 
       (ape-core/write-timeout
