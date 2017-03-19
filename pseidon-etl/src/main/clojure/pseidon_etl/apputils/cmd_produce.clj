@@ -102,6 +102,8 @@
       (.shutdown exec)
       (.awaitTermination exec Long/MAX_VALUE TimeUnit/MILLISECONDS)
 
+      ;;sleep 10 seconds to give the producer flush time
+      (Thread/sleep 10000)
       (finally
         (client/close conn)))
     {:message-stats @messages-stats :errors @errors-a}))

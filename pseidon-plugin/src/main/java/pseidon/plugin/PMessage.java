@@ -6,6 +6,8 @@ import java.util.Objects;
 
 /**
  * P(lugin)Message(s) passed to and returned from {@link Plugin}s.<br/>
+ * <p/>
+ * The input message from pseidon-etl is TopicMsg.
  */
 public interface PMessage<T> {
 

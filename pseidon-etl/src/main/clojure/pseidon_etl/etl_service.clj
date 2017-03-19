@@ -9,7 +9,7 @@
     (pseidon.plugin Context$DefaultCtx PMessage$DefaultPMessage Context PMessage Plugin)
     (java.util Map Collection)
     (java.util.function Function)
-    (pseidon_etl FormatMsg TopicMsg Util))
+    (pseidon_etl FormatMsgImpl TopicMsgImpl Util))
   (:require [thread-load.core :as load]
             [fun-utils.queue :as futils-queue]
             [pseidon-etl.memory :as memory]
@@ -51,10 +51,10 @@
 
 (defn- default-terminate [state & _] (assoc state :status :terminate))
 
-(defn ^TopicMsg wrap-msg
+(defn ^TopicMsgImpl wrap-msg
   "Msg can be an object or a byte array, the object is parsed to a json string and then the bytes are extracted
    "
-  ([state topic ^FormatMsg msg]
+  ([state topic ^FormatMsgImpl msg]
    (try
      (let [output-format (topic-service/get-output-format topic (:conf state) (:db state))
            codec (condp = (name output-format)
@@ -90,7 +90,7 @@
 
     ;;msgs2 == (defrecord TopicMsg [^String topic msg codec])
     ;; group by topic and send to pipeline
-    (doseq [[topic grouped-msgs] (group-by #(.getTopic ^TopicMsg %) msgs2)]
+    (doseq [[topic grouped-msgs] (group-by #(.getTopic ^TopicMsgImpl %) msgs2)]
       (.apply plugin-pipeline (PMessage/instance (str topic) ^Collection grouped-msgs)))))
 
 (defn- metric->map [^Meter timer]

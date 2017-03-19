@@ -1,22 +1,22 @@
 package pseidon_etl;
 
-import clojure.lang.APersistentMap;
-import clojure.lang.IPersistentMap;
 import clojure.lang.Keyword;
 import clojure.lang.PersistentArrayMap;
+import pseidon.plugin.FormatMsg;
 
 import java.util.Arrays;
 import java.util.Map;
 
 /**
- * Represents a single message read from kafka.
+ * Represents a single message read from kafka.<br/>
+ * Implements PersistentArrayMap to ease usage in clojure e.g <pre>(:ts msg)</pre> returns the timestamp.
  */
-public class FormatMsg extends PersistentArrayMap{
+public class FormatMsgImpl extends PersistentArrayMap implements FormatMsg {
 
     /**
      *The input format that was used to read the message and deserialize it to a Map object, e.g avro
      */
-    private final IPersistentMap format;
+    private final Map format;
     /**
      * The message timestamp, extracted as per the format
      */
@@ -31,7 +31,7 @@ public class FormatMsg extends PersistentArrayMap{
      */
     private final Object msg;
 
-    public FormatMsg(IPersistentMap format, long ts, byte[] bts, Object msg) {
+    public FormatMsgImpl(Map format, long ts, byte[] bts, Object msg) {
         this.format = format;
         this.ts = ts;
         this.bts = bts;
@@ -61,21 +61,25 @@ public class FormatMsg extends PersistentArrayMap{
     /**
      * Keys props:Map, type:String
      */
-    public IPersistentMap getFormat() {
+    @Override
+    public Map getFormat() {
         return format;
     }
 
     /**
      * Time in milliseconds
      */
+    @Override
     public long getTs() {
         return ts;
     }
 
+    @Override
     public byte[] getBts() {
         return bts;
     }
 
+    @Override
     public Object getMsg() {
         return msg;
     }

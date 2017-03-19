@@ -1,13 +1,14 @@
 package pseidon_etl;
 
-import clojure.lang.ILookup;
 import clojure.lang.Keyword;
 import clojure.lang.PersistentArrayMap;
+import pseidon.plugin.FormatMsg;
+import pseidon.plugin.TopicMsg;
 
 /**
  * Input message for all {@link pseidon.plugin.Plugin}s, and represents a single message read from kafka.
  */
-public class TopicMsg extends PersistentArrayMap{
+public class TopicMsgImpl extends PersistentArrayMap implements TopicMsg {
 
     /**
      * The kafka topic
@@ -24,7 +25,7 @@ public class TopicMsg extends PersistentArrayMap{
      */
     final FormatMsg msg;
 
-    public TopicMsg(String topic, String codec, FormatMsg msg) {
+    public TopicMsgImpl(String topic, String codec, FormatMsg msg) {
         this.topic = topic;
         this.codec = codec;
         this.msg = msg;
@@ -47,14 +48,17 @@ public class TopicMsg extends PersistentArrayMap{
             return super.valAt(key);    }
 
 
+    @Override
     public String getTopic() {
         return topic;
     }
 
+    @Override
     public String getCodec() {
         return codec;
     }
 
+    @Override
     public FormatMsg getMsg() {
         return msg;
     }

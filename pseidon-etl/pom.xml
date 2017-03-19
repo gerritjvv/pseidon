@@ -4,16 +4,16 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-       <groupId>pseidon</groupId>
+       <groupId>com.steppechange.dmp_research</groupId>
        <artifactId>pseidon-parent</artifactId>
        <version>1.0</version>
     </parent>
 
-    <groupId>pseidon-etl</groupId>
+    <groupId>pseidon</groupId>
     <artifactId>pseidon-etl</artifactId>
     <packaging>jar</packaging>
     <name>pseidon-etl</name>
-    <version>0.1.0</version>
+    <version>0.1.0-SNAPSHOT</version>
     <description>Kafka to local disk import</description>
 
     <url>github.com/gerritjvv/pseidon</url>
@@ -669,7 +669,7 @@
         <dependency>
             <groupId>fileape</groupId>
             <artifactId>fileape</artifactId>
-            <version>1.2.0-SNAPSHOT</version>
+            <version>2.0.0-SNAPSHOT</version>
             <exclusions>
                 <exclusion>
                     <groupId>org.apache.hadoop</groupId>

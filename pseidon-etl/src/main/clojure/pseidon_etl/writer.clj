@@ -17,7 +17,7 @@
     (org.joda.time DateTime)
     (java.nio.charset StandardCharsets)
     (java.util.concurrent.atomic AtomicLong)
-    (pseidon_etl Util FormatMsg TopicMsg)))
+    (pseidon_etl Util FormatMsgImpl TopicMsgImpl)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;; Global variables Records and Schemas
@@ -27,15 +27,15 @@
 
 (deftype WriterMetricsKey [node topic file-name])
 
-(defn ^TopicMsg ->TopicMsg [topic ^FormatMsg msg codec]
-  (TopicMsg. (name topic) (name codec) msg))
+(defn ^TopicMsgImpl ->TopicMsg [topic ^FormatMsgImpl msg codec]
+  (TopicMsgImpl. (name topic) (if codec (name codec) "gzip") msg))
 
-(defn ^TopicMsg wrap-msg
+(defn ^TopicMsgImpl wrap-msg
   "topic:
-   msg: foramts/FormatMsg
-   codec: gzip, parquet, txt"
-  ([topic ^FormatMsg msg] (wrap-msg topic msg nil))
-  ([topic ^FormatMsg msg codec] (->TopicMsg topic msg codec)))
+   msg: formats/FormatMsg
+   codec: gzip, parquet, txt  default to gzip"
+  ([topic ^FormatMsgImpl msg] (wrap-msg topic msg nil))
+  ([topic ^FormatMsgImpl msg codec] (->TopicMsg topic msg codec)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;; Private functions
@@ -258,7 +258,7 @@
                                                  :roll-callbacks       [callback-f]
                                                  :error-handler        exit-application
                                                  :allow-all-ts         false
-                                                 :env-key-parser       #(string/replace % #"[\-0-9]{2,3}" "") ;all env keys should only use the topic part e.g keys given are adx-bid-request-yyyy-MM-dd-HH
+                                                 :env-key-parser       #(string/replace % #"[\-0-9]{2,3}" "") ;all env keys should only use the topic part e.g keys given are mylog-yyyy-MM-dd-HH
                                                  }
                                                 (:writer conf)))]
 

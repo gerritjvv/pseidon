@@ -37,7 +37,7 @@
             [clj-time.coerce :as c])
   (:import (java.util Map Date)
            (org.apache.commons.lang3 StringUtils)
-           (pseidon_etl FormatMsg)))
+           (pseidon_etl FormatMsgImpl)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;; Data Types and multimethods
@@ -56,8 +56,8 @@
 
 (declare parse-format)
 
-(defn ^FormatMsg ->FormatMsg [format ^long ts ^"[B" bts msg]
-  (FormatMsg. format ts bts msg))
+(defn ^FormatMsgImpl ->FormatMsg [format ^long ts ^"[B" bts msg]
+  (FormatMsgImpl. format ts bts msg))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;; utility functions
@@ -135,9 +135,9 @@
         ts (txtmsg->ts format msg)]
     (->FormatMsg format ts bts msg)))
 
-(defmethod msg->string "txt" [_ _ _ ^FormatMsg msg]
+(defmethod msg->string "txt" [_ _ _ ^FormatMsgImpl msg]
   (String. ^"[B" (.getBts msg) "UTF-8"))
 
-(defmethod msg->bts "txt" [_ _ _ ^FormatMsg msg]
+(defmethod msg->bts "txt" [_ _ _ ^FormatMsgImpl msg]
   (.getBts msg))
 

@@ -8,13 +8,14 @@
 
 (deftest test-bts->msg
 
-        (let [ts  (System/currentTimeMillis)
+        (let [topic "testtopic"
+              conf {}
+              ts  (System/currentTimeMillis)
               input-str (str ts \u0001 "hi")
               bts (.getBytes input-str)
               f   (formats/parse-format "txt:ts=0;sep=byte1")
-              msg (formats/bts->msg f bts)
-
-              msg-str (formats/msg->string f msg)]
+              msg (formats/bts->msg conf topic f bts)
+              msg-str (formats/msg->string conf topic f msg)]
 
 
           (is (= (into [] (:msg msg)) [(str ts) "hi"]))

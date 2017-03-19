@@ -14,7 +14,7 @@
 
 (defonce TEST-TOPIC "TEST")
 
-(defonce ^Schema TEST-SCHEMA-STR "{\"type\":\"record\",\"name\":\"encryption_output\",\"fields\":[{\"name\":\"timestamp\",\"type\":\"long\"},{\"name\":\"line\",\"type\":\"string\"}]}")
+(defonce TEST-SCHEMA-STR "{\"type\":\"record\",\"name\":\"encryption_output\",\"fields\":[{\"name\":\"timestamp\",\"type\":\"long\"},{\"name\":\"line\",\"type\":\"string\"}]}")
 
 (defn ^Schema schema [json] (.parse (Schema$Parser.) (str json)))
 

@@ -57,6 +57,8 @@ function deploy_pseidon {
   # for retry cache ensure that tmp has read write permissions for all
   chmod -R a+rw /tmp/
 
+  rm -f ${RETRY_CACHE}*
+
   sed "s;{redis};${SRV1};g" /vagrant/pseidon-etl/vagrant-digital/config/pseidon.edn |\
 
    sed "s;{datadir};${DATADIR};g" |\
