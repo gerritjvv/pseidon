@@ -29,7 +29,7 @@
 
             bts->msg => FormatMsg { ts bts msg:Vector}
 
-           Format avro
+           Format avro-txt
              see pseidon-etl.avro/avro-format
           "}
   pseidon-etl.formats

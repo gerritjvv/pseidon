@@ -40,7 +40,7 @@ rm -rf $DATADIR/*.gz
 
 rm -f /tmp/kafka-retry-cache*
 
-MYSQL_PWD=pseidon mysql -upseidon -e  \"insert into pseidon.pseidon_logs (log, format, output_format, log_group, enabled) values ('${TEST_TOPIC}', 'avro:ts=0;msg=1', 'json', 'etl', 1) on duplicate key update enabled=1\" || exit -1
+MYSQL_PWD=pseidon mysql -upseidon -e  \"insert into pseidon.pseidon_logs (log, format, output_format, log_group, enabled) values ('${TEST_TOPIC}', 'avro-txt:ts=0;msg=1', 'json', 'etl', 1) on duplicate key update enabled=1\" || exit -1
 
 service pseidon-etl start && timeout 120 bash -c 'until echo > /dev/tcp/localhost/8282 ; do sleep 2; done' || echo \"pseidon start failed\" ; exit -1
 

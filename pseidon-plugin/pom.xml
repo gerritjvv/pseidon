@@ -6,6 +6,7 @@
      <groupId>com.steppechange.dmp_research</groupId>
      <artifactId>pseidon-parent</artifactId>
      <version>1.0</version>
+     <relativePath>../</relativePath>
   </parent>
 
   <groupId>pseidon</groupId>

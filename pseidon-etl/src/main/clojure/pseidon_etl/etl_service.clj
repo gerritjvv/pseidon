@@ -7,7 +7,7 @@
     (java.util.concurrent.atomic AtomicLong AtomicBoolean)
     (pseidon.plugin.pipeline PipelineParser)
     (pseidon.plugin Context$DefaultCtx PMessage$DefaultPMessage Context PMessage Plugin)
-    (java.util Map Collection)
+    (java.util Map Collection Arrays)
     (java.util.function Function)
     (pseidon_etl FormatMsgImpl TopicMsgImpl Util))
   (:require [thread-load.core :as load]
