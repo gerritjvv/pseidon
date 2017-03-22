@@ -10,7 +10,7 @@
         <relativePath>../</relativePath>
     </parent>
 
-    <groupId>pseidon</groupId>
+    <groupId>com.steppechange.dmp_research</groupId>
     <artifactId>pseidon-hdfs</artifactId>
     <packaging>jar</packaging>
     <version>0.1.0-SNAPSHOT</version>

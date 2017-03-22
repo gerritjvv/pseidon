@@ -20,7 +20,7 @@
     <version>1.0</version>
     <relativePath>../</relativePath>
   </parent>
-  <groupId>pseidon</groupId>
+  <groupId>com.steppechange.dmp_research</groupId>
   <artifactId>solr-plugin-demo</artifactId>
   <version>0.1.0-SNAPSHOT</version>
   <name>solr-plugin-demo</name>

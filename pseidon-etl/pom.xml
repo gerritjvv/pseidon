@@ -10,7 +10,7 @@
        <relativePath>../</relativePath>
     </parent>
 
-    <groupId>pseidon</groupId>
+    <groupId>com.steppechange.dmp_research</groupId>
     <artifactId>pseidon-etl</artifactId>
     <packaging>jar</packaging>
     <name>pseidon-etl</name>

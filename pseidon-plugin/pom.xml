@@ -9,7 +9,7 @@
      <relativePath>../</relativePath>
   </parent>
 
-  <groupId>pseidon</groupId>
+  <groupId>com.steppechange.dmp_research</groupId>
   <artifactId>pseidon-plugin</artifactId>
   <version>0.1.0-SNAPSHOT</version>
   <packaging>jar</packaging>
