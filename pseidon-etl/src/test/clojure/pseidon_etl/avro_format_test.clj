@@ -14,7 +14,7 @@
 
 (defonce TEST-TOPIC "TEST")
 
-(defonce ^Schema TEST-SCHEMA-STR "{\"type\":\"record\",\"name\":\"encryption_output\",\"fields\":[{\"name\":\"timestamp\",\"type\":\"long\"},{\"name\":\"line\",\"type\":\"string\"}]}")
+(defonce TEST-SCHEMA-STR "{\"type\":\"record\",\"name\":\"encryption_output\",\"fields\":[{\"name\":\"timestamp\",\"type\":\"long\"},{\"name\":\"line\",\"type\":\"string\"}]}")
 
 (defn ^Schema schema [json] (.parse (Schema$Parser.) (str json)))
 
@@ -31,30 +31,6 @@
     r))
 
 
-
-(defn test-avro-etl-service-support-runner [resources topic]
-  )
-
-;(deftest test-avro-formats
-;  (let [registry-client (registry-client)
-;        format (formats/format-descriptor
-;                 (atom {:client-reg (delay registry-client)})
-;                 {}
-;                 (formats/parse-format "avro:ts=0;msg=1"))
-;
-;        sc (schema TEST-SCHEMA-STR)]
-;
-;    (dotimes [i 10000]
-;      (let [record (test-record sc (str i))
-;            bts ((:encoder format) TEST-TOPIC record)
-;            msg (formats/bts->msg {} TEST-TOPIC format bts)
-;            msg-str (formats/msg->string {} TEST-TOPIC format msg)
-;            msg-bts (formats/msg->bts {} TEST-TOPIC format msg)
-;            ]
-;        (is (= (.get ^IndexedRecord record 1) (str i)))
-;        (is (java.util.Arrays/equals (.getBytes (str msg-str) "UTF-8") ^"[B" msg-bts))))))
-
-
 (deftest test-avro-formats-writer
   (let [registry-client (registry-client)
 
@@ -63,7 +39,7 @@
         format (formats/format-descriptor
                  (atom {:client-reg (delay registry-client)})
                  {}
-                 (formats/parse-format "avro:ts=0;msg=1"))
+                 (formats/parse-format "avro-txt:ts=0;msg=1"))
 
         writer-service (test-utils/test-writer-service sleep-ms)
 

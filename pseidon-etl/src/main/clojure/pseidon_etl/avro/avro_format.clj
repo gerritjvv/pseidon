@@ -3,7 +3,7 @@
           https://github.com/confluentinc/schema-registry
 
 
-          Format avro
+          Format avro-txt  this format is for avro wrapping a txt message
             All messages must be deserializable to IndexedRecord
             props => ts=index the index at which the timestamp in milliseconds can be found, -1 == current time in millis
                   => msg=index the index at which the message can be found, -1 means use whole IndexedRecord
@@ -34,6 +34,10 @@
     (fn [topic record]
       (.deserialize des (str topic) (bytes record)))))
 
+(defn format-url [^String url]
+  (let [url1 (if (.startsWith url "http") url (str "http://" url))
+        url2 (if (.contains url ":") url1 (str url1 ":8081"))]
+    url2))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;; formats multi method impls
 
@@ -42,9 +46,9 @@
         max-entries (:avro-schema-registry-max-schemas conf REGISTRY-CLIENT-MAX-ENTRIES)]
     (info "Creating Avro SchemaRegistryClient with " url " identityMapCapacity " max-entries)
 
-    (CachedSchemaRegistryClient. url (int max-entries))))
+    (CachedSchemaRegistryClient. (str (format-url url))  (int max-entries))))
 
-(defmethod formats/format-descriptor "avro" [state-a conf format]
+(defmethod formats/format-descriptor "avro-txt" [state-a conf format]
 
   (let [
         ;;; share the same client-registry via global state
@@ -88,13 +92,14 @@
       :msg-index (Integer/parseInt (str msg-index)))))
 
 
-(defmethod formats/msg->string "avro" [conf topic format format-msg]
-  (str format-msg))
+(defmethod formats/msg->string "avro-txt" [conf topic format format-msg]
+  (str (:msg format-msg)))
 
-(defmethod formats/msg->bts "avro" [conf topic format format-msg]
-  (.getBytes (str format-msg) "UTF-8"))
+;;; NOTE: the msg is expected to always be a string
+(defmethod formats/msg->bts "avro-txt" [conf topic format format-msg]
+  (.getBytes (str (:msg format-msg)) "UTF-8"))
 
-(defmethod formats/bts->msg "avro" [conf topic format ^"[B" bts]
+(defmethod formats/bts->msg "avro-txt" [conf topic format ^"[B" bts]
   (let [ts-parser (:ts-parser format)
         msg-index (int (:msg-index format))
 

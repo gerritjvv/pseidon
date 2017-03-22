@@ -107,6 +107,7 @@
        "valid formats are determined by the pseidon-etl.formats namespace and multimethod implementations"
        [log state-a conf db]
        (let [format (formats/parse-format (or (:format (get-topic-meta log db)) "txt"))]
+
          (formats/format-descriptor state-a conf format)))
 
 (defn
@@ -125,10 +126,12 @@
   component/Lifecycle
 
   (start [component]
+
     (info "Starting Topic Service")
     (try
       (do
         ;;run update topics once
+
         (update-topics! conf (:writer-ctx writer-service) (:database component) (:kafka-node component))
 
         (let [freq (get conf :topic-refresh-freq-ms 10000)

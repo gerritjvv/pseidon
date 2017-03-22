@@ -6,6 +6,8 @@ import java.util.Objects;
 
 /**
  * P(lugin)Message(s) passed to and returned from {@link Plugin}s.<br/>
+ * <p/>
+ * The input message from pseidon-etl is TopicMsg.
  */
 public interface PMessage<T> {
 
@@ -41,6 +43,16 @@ public interface PMessage<T> {
      */
 
     PMessage<T> updateMsgs(String type);
+
+    static <T> PMessage<T> instance(String type, T msg)
+    {
+        return new DefaultPMessage<T>(type, msg);
+    }
+
+    static <T> PMessage<T> instance(String type, Collection<T> msgs)
+    {
+        return new DefaultPMessage<T>(type, msgs);
+    }
 
     class DefaultPMessage<T> implements PMessage<T> {
 

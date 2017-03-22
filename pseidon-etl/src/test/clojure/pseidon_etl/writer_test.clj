@@ -7,24 +7,13 @@
     [clojure.java.io :as io]
     [pjson.core :as pjson]
     [pseidon-etl.formats :as formats])
-    (:import (java.io File)))
+  (:import (java.io File)
+           (java.util Arrays)))
 
 
 (deftest writer-test
-  (fact "Test asBytes"
-
-        ;test direct bytes
-        (let [bts (byte-array 10)]
-          (writer/as-bytes (writer/wrap-msg "test" bts)) => bts)
-
-        ;test msg to bytes
-        (let [msg {"a" 1 "b" 2}]
-          (pjson/read-str (String. (writer/as-bytes (writer/wrap-msg "test" msg)) "UTF-8")) => msg))
 
 
-  (fact "Test bytes?"
-        (writer/bytes? (byte-array 10)) => true
-        (writer/bytes? 1) => false)
 
   (defn _create-test-dir []
     (let [file (io/file (str "target/test/writer-test/dir-" (System/currentTimeMillis)))]
@@ -42,8 +31,8 @@
                                               :rollover-timeout 1000
                                               :rollover-abs-timeout 1000})]
 
-          (writer/write-msgs {} writer-ctx (take 1000 (repeatedly #(writer/wrap-msg "test" (formats/->FormatMsg "txt" ts (.getBytes "HI") "HI")))))
-          (writer/write-msgs {}  writer-ctx (take 1000 (repeatedly #(writer/wrap-msg "test" (formats/->FormatMsg "txt" ts (.getBytes "HI") "HI")))))
+          (writer/write-msgs {} writer-ctx (take 1000 (repeatedly #(writer/wrap-msg "test" (formats/->FormatMsg (formats/->Format "txt" {}) ts (.getBytes "HI") {:msg "HI"})))))
+          (writer/write-msgs {}  writer-ctx (take 1000 (repeatedly #(writer/wrap-msg "test" (formats/->FormatMsg (formats/->Format "txt" {}) ts (.getBytes "HI") {:msg "HI"})))))
           (Thread/sleep 1000)
           (writer/close-writer writer-ctx)
 

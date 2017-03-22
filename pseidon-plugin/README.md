@@ -31,7 +31,45 @@ Exmaple
 
 A plugin takes a pseidon.plugin.PMessage and returns a pseidon.plugin.PMessage.
 
-### Example Plugin
+### Examples
+
+#### Simple plugin
+
+Use if you only want to evaluate one message at a time.
+
+```java
+public class IncSimplePlugin extends AbstractPlugin<Integer, Integer>{
+
+    @Override
+    public Integer exec(String type, Integer msg) {
+        return msg + 1;
+    }
+}
+```
+
+### Batched Plugin
+
+Use if you need access to the current batch or messages if any.
+
+```java
+public class IncBatchedPlugin extends AbstractBatchedPlugin<Integer, Integer>{
+
+    @Override
+    public Collection<Integer> exec(String type, Collection<Integer> msgs) {
+        List<Integer> resp = new ArrayList<>();
+
+        for(Integer i : msgs){
+            resp.add(i+1);
+        }
+
+        return resp;
+    }
+}
+```
+
+#### Low level Plugin
+
+Use if you need to chagne the return message type.
 
 ```java
 public class IncPlugin implements Plugin<Integer, Integer>{
@@ -46,6 +84,8 @@ public class IncPlugin implements Plugin<Integer, Integer>{
     }
 }
 ```
+
+
 
 
 #### LifeCycle
@@ -64,5 +104,5 @@ On application shutdown the plugins shutdown method is calls.
 When developing its useful to test and run the pipeline before deploying.
 
 ```java
-Pipeline<?> fn = PipelineParser.parse(new Context.DefaultCtx(), Reader.read(EDN_FILE));
+Pipeline<?> fn = PipelineParser.parse(Context.instance(), Reader.read(EDN_FILE));
 ```

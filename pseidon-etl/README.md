@@ -18,6 +18,7 @@ The pseidon-etl uses the following tables:
 <tr><td>:etl-db-user</td><td>"pseidon"</td><td>mysql db user name</td></tr>
 <tr><td>:etl-db-pwd</td><td>"pseidon"</td><td>mysql db password</td></tr>
 <tr><td>:etl-group</td><td>"etl"</td><td>The sub group for this etl machine, which si used in the log_group="$group" query above</td></tr>
+<tr><td>:avro-schema-registry-url</td><td>For record with format avro a schema registry is required</td></tr>
 </table>
 
 
@@ -25,8 +26,75 @@ The pseidon-etl uses the following tables:
 :writer {:parallel-files 1 :out-buffer-size 500000 :use-buffer false :flush-on-write true :write-multiplier 1}
 ```
 
+#### Plugins
+
+See pseidon-plugin for detailed information.
+
+This system can be customised with a plugin pipeline and custom classes, that must be available
+on the classpath (in the /opt/pseidon-etl2/lib/) directory.
+
+The input message is
+
+```clojure
+(defrecord TopicMsg [^String topic msg codec])
+```
+
+or in Java
+
+```
+package pseidon_etl;
+
+class TopicMsg {
+  String topic;
+  String codec;
+  FormatMsg msg;
+}
+
+
+
+//The contents of this message depends on the configured in the pseidon_logs table.
+
+class FormatMsg {
+  long ts; //timestamp in millis extracte from the message
+  byte[] bts; //the original message bytes
+  Object msg; //the message extracted from format e.g for avro IndexedRecord
+}
+
+```
+
+The default pipeline is:
+
+```clojure
+{
+
+ :plugins {
+           pipeline (-> disk-writer)
+          }
+}
+```
+
+To specify a custom pipeline do:
+
+```clojure
+{
+ ;; define plugins as name pluginclass
+ ;; you can still use the disk-writer plugin without defining it
+ a pseidon.plugin.IncPlugin
+ b pseidon.plugin.IncPlugin
+ c pseidon.plugin.IncPlugin
+ d pseidon.plugin.IncPlugin
+
+ ;;define pipeline and refer to plugins via name
+ ;;if message is "double" result is 0 -> 4 otherwise 0 -> 3
+ pipeline (-> a b (match "double" c) (all d))
+
+ }
+```
 
 #### Disk Write
+
+If part of the pluging system under the name "disk-writer", and will be used by default
+if no ":plugins" property is defined.
 
 <table>
 <tr><td>:data-dir</td><td></td><td>Directory where files will be written to, must have pseidon user write permissions</td></tr>

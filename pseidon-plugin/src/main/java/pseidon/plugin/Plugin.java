@@ -39,5 +39,4 @@ public interface Plugin<T, R> extends Function<PMessage<T>, PMessage<R>> {
      * @return
      */
     PMessage<R> apply(PMessage<T> msg);
-
 }

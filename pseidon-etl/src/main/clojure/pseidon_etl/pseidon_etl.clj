@@ -1,11 +1,37 @@
-(ns pseidon-etl.pseidon-etl
+(ns
+  ^{:doc
+
+    "
+  cmd <send|consume>
+
+  send:  send test json data to kafka
+         send <schema-registry-url> <broker-list> <threads> <num-of-records-per-thread>
+
+  consume: consume data from topics in kafka on a unique group and from the beginning
+           used for performance and stability testing
+           will run till ctrl+c or kill <pid>
+           consume <broker-list> redis-host <topics>
+
+  work-queue: display work units in the work queue
+           host from limit [password <redis-password>]
+
+  stop:
+        stop the long running pseidon-etl application
+
+  other: any other command will start the pseidon-etl application
+
+  "}
+  pseidon-etl.pseidon-etl
   (:require [pseidon-etl.app :as app]
             [pseidon-etl.conf :refer [load-conf]]
             [pseidon-etl.util :as util]
             [pseidon-etl.formats :as formats]
             [clojure.tools.logging :refer [error info]]
             [clj-logging-config.log4j :refer [set-logger!]]
-            [clojure.tools.nrepl :as repl])
+            [clojure.tools.nrepl :as repl]
+            [pseidon-etl.apputils.cmd-work-queue :as cmd-work-queue]
+            [pseidon-etl.apputils.cmd-produce :as cmd-produce]
+            [pseidon-etl.apputils.cmd-consume :as cmd-consume])
   (:gen-class)
   (:import (java.lang Thread$UncaughtExceptionHandler)))
 
@@ -13,11 +39,16 @@
 (defn init [args]
   (set-logger!)
 
-  (if-let [conf-file (first args)]
-    (let [conf (load-conf conf-file)]
-      (alter-var-root #'pseidon-etl.conf/*default-conf* (fn [_] conf))
-      (app/start! conf)
-      (info "App Started"))))
+  (when-not (first args)
+    (throw (RuntimeException. (str "Please specify a edn config file"))))
+
+  (let [conf-file (first args)
+        conf (load-conf conf-file)]
+    (alter-var-root #'pseidon-etl.conf/*default-conf* (fn [_] conf))
+
+    (app/start! conf)
+
+    (info "App Started")))
 
 (defn start [])
 
@@ -56,12 +87,37 @@
   (Thread/setDefaultUncaughtExceptionHandler (reify Thread$UncaughtExceptionHandler
                                                (uncaughtException [this t e]
                                                  (util/fatal-error e)))))
+
+(defn consume [brokers redis-host topic]
+  (cmd-consume/consume-data topic brokers redis-host))
+
+(defn send-msgs [schema-registry-url brokers topic threads count-per-thread & conf]
+  (cmd-produce/send-data schema-registry-url threads count-per-thread topic brokers (apply array-map conf)))
+
+(defn work-queue [& args]
+  (cmd-work-queue/read-redis-queue args))
+
 (defn -main
   "   stop config-file
     or config-file ;; is start"
   [& args]
+
   (let [cmd (first args)]
     (cond
+      (= cmd "send")
+      (do (apply send-msgs (rest args))
+          (System/exit 0))
+
+      (= cmd "consume")
+      (do
+        (apply consume (rest args))
+        (System/exit 0))
+
+      (= cmd "work-queue")
+      (do
+        (apply work-queue (rest args))
+        (System/exit 0))
+
       (= cmd "stop")
       (try
         (send-stop-signal (second args))
@@ -70,9 +126,12 @@
       :else
       (do
         (init args)
+
         (add-shutdown-hook)
         (add-uncaught-exceptionhandler!)
+
         (start)
+
         (while (not (Thread/interrupted))
           (Thread/sleep 1000))
         (System/exit 0)))))

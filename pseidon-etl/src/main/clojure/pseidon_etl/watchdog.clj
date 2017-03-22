@@ -4,9 +4,12 @@
   (:import [org.apache.commons.exec CommandLine DefaultExecuteResultHandler DefaultExecutor ExecuteWatchdog ProcessDestroyer ShutdownHookProcessDestroyer]))
 
 
+(defn cmd [& args]
+  (doto (CommandLine. (str "test")) (.addArguments (into-array String args))))
+
 (defn run-process [cmd-bash args]
   (let [^ProcessDestroyer destroyer (ShutdownHookProcessDestroyer.)
-        ^CommandLine cmd (doto (CommandLine. (str cmd-bash)) (.addArguments (into-array args)))
+        ^CommandLine cmd (doto (CommandLine. (str cmd-bash)) (.addArguments (into-array String (mapv str args))))
         ^ExecuteWatchdog watchdog (ExecuteWatchdog. ExecuteWatchdog/INFINITE_TIMEOUT)
         ^DefaultExecuteResultHandler handler (DefaultExecuteResultHandler.)
         ^DefaultExecutor exec (doto (DefaultExecutor.) (.setExitValue 1) (.setWatchdog watchdog) (.setProcessDestroyer destroyer)

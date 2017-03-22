@@ -44,12 +44,13 @@ public class ComposedActionTest extends AbstractionActionTest {
                 new ArrayList<>(),
 
                 (List list, Integer i) -> {
+
                     list.add(incMsg(results));
                     return list;
                 });
 
 
-        new ComposedAction(callFunctions).apply(new PMessage.DefaultPMessage("test", Arrays.asList(0)));
+        new ComposedAction(callFunctions).apply(PMessage.instance("test", Arrays.asList(0)));
 
         for(int i = 0; i < n; i++)
             assertEquals(i, results.get(i).intValue());

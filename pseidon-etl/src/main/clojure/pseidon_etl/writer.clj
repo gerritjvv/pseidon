@@ -3,6 +3,7 @@
     [pseidon-etl.util :as util]
     [fileape.core :as ape-core]
     [fileape.parquet.writer :as ape-parquet-writer]
+    [fileape.avro.writer :as ape-avro-writer]
     [clojure.tools.logging :refer [error warn info debug fatal]]
     [fun-utils.core :as futils]
     [clj-time.coerce :as time-c]
@@ -17,7 +18,7 @@
     (org.joda.time DateTime)
     (java.nio.charset StandardCharsets)
     (java.util.concurrent.atomic AtomicLong)
-    (pseidon_etl Util)))
+    (pseidon_etl Util FormatMsgImpl TopicMsgImpl)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;; Global variables Records and Schemas
@@ -27,14 +28,15 @@
 
 (deftype WriterMetricsKey [node topic file-name])
 
-;msg should be the json message
-(defrecord TopicMsg [^String topic msg codec])
-(defn wrap-msg
+(defn ^TopicMsgImpl ->TopicMsg [topic ^FormatMsgImpl msg codec]
+  (TopicMsgImpl. (name topic) (if codec (name codec) "gzip") msg))
+
+(defn ^TopicMsgImpl wrap-msg
   "topic:
-   msg: foramts/FormatMsg
-   codec: gzip, parquet, txt"
-  ([topic msg] (wrap-msg topic msg nil))
-  ([topic msg codec] (->TopicMsg topic msg codec)))
+   msg: formats/FormatMsg
+   codec: gzip, parquet, txt  default to gzip"
+  ([topic ^FormatMsgImpl msg] (wrap-msg topic msg nil))
+  ([topic ^FormatMsgImpl msg codec] (->TopicMsg topic msg codec)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;; Private functions
@@ -75,21 +77,10 @@
                   (get-local-dt-hr-str ts)))))
   ([{:keys [topic msg]}]
     ;; msg must be of type formats/FormatMsg
-
    (msg->topic-datehr topic (:ts msg))))
 
 (defn- ^"[B" str->bts [^String s]
   (.getBytes s StandardCharsets/UTF_8))
-
-(defn bytes? [x]
-  (= (Class/forName "[B")
-     (class x)))
-
-(defn ^"[B" as-bytes [topic-msg]
-  (let [msg (:msg topic-msg)]
-    (if (instance? byte-array-class msg)
-      msg
-      (str->bts (clj-json/generate-string msg)))))
 
 ;;helper function that deals with nil numbers
 (defn _safe-add [a b]
@@ -100,17 +91,33 @@
 
 (set! *unchecked-math* true)
 
-
 (defn do-msg-write!
   "state: the current system state with keys :kafka-client :kafka-node
    msgs: [msg]: msg is a KafkaTSMsg keys [msg topic node codec], its assumed that all msgs have the same ts and same codec"
   [conf {:keys [writer-ctx flush-on-write]} k msgs]
 
 
-  (let [codec (:codec (first msgs))
+  (let [codec (keyword (:codec (first msgs)))
         ctx (if codec (assoc-in writer-ctx [:ctx :conf :codec] codec) writer-ctx)]
 
     (cond
+      ;;; Note:  TODO we need to use the notion of an output-format in the log format itself
+      ;;;;       currently avro messages are just wrappers where the first message is the timestamp and the second is the plain txt message
+      ;;;;       ALSO this probably needs to be handled in the FOMRAT itself thus if we call msg->bts we get the bts.
+      ;;;;       even better would be to do format/write! ape so that the format itself figures out how to write based on its output codec
+      (= codec :avro)
+      (ape-core/write-timeout
+        ctx k
+        (fn [{:keys [avro]}]
+          (doseq [topic-msg msgs]
+            (try
+              ;;; NOTE: the topic schema for avro must be exactly the same as for the :msg written
+              (ape-avro-writer/write! avro (:msg topic-msg))
+              (catch Exception e (do
+                                   (error e (clj-json/generate-string {:topic (:topic topic-msg)
+                                                                       :e     (str e)})))))))
+        600000)
+
       (= codec :parquet)
 
       (ape-core/write-timeout
@@ -125,6 +132,7 @@
         600000)
 
       :else
+      ;;;; txt and avro-txt messages are written here
       (ape-core/write-timeout
         ctx k
         (fn [{:keys [^DataOutputStream out file] :as m}]
@@ -132,11 +140,11 @@
           ;;conf topic format msg
           (doseq [topic-msg msgs]
             (let [
-                  format-msg (:msg topic-msg)                    ;;is a TopicMsg{:msg formats/FormatMsg}
-                  bts (formats/msg->bts conf
-                                        (:topic topic-msg)
-                                        (:format format-msg)
-                                        (:msg format-msg))]
+                  format-msg (:msg topic-msg)               ;;is a TopicMsg{:msg formats/FormatMsg}
+                  bts (formats/msg->bts    conf
+                                           (:topic topic-msg)
+                                           (:format format-msg)
+                                           format-msg)]
 
               (.write out ^"[B" bts)
               (.write out new-line-bts)))
@@ -268,7 +276,7 @@
                                                  :roll-callbacks       [callback-f]
                                                  :error-handler        exit-application
                                                  :allow-all-ts         false
-                                                 :env-key-parser       #(string/replace % #"[\-0-9]{2,3}" "") ;all env keys should only use the topic part e.g keys given are adx-bid-request-yyyy-MM-dd-HH
+                                                 :env-key-parser       #(string/replace % #"[\-0-9]{2,3}" "") ;all env keys should only use the topic part e.g keys given are mylog-yyyy-MM-dd-HH
                                                  }
                                                 (:writer conf)))]
 
@@ -292,6 +300,9 @@
 
     (dissoc component :writer-ctx)))
 
+
+(defn base-dir [writer-service]
+  (:base-dir writer-service))
 
 (defn writer-service [conf]
   (->WriterService conf nil nil nil))

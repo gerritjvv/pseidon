@@ -3,12 +3,13 @@
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
-     <groupId>pseidon</groupId>
+     <groupId>com.steppechange.dmp_research</groupId>
      <artifactId>pseidon-parent</artifactId>
      <version>1.0</version>
+     <relativePath>../</relativePath>
   </parent>
 
-  <groupId>pseidon</groupId>
+  <groupId>com.steppechange.dmp_research</groupId>
   <artifactId>pseidon-plugin</artifactId>
   <version>0.1.0-SNAPSHOT</version>
   <packaging>jar</packaging>

@@ -4,7 +4,12 @@
     [java.util.concurrent Executors ExecutorService Callable]
     [java.net InetAddress]
     (com.codahale.metrics MetricRegistry Meter JmxReporter)
-    (java.util.concurrent.atomic AtomicLong AtomicBoolean))
+    (java.util.concurrent.atomic AtomicLong AtomicBoolean)
+    (pseidon.plugin.pipeline PipelineParser)
+    (pseidon.plugin Context$DefaultCtx PMessage$DefaultPMessage Context PMessage Plugin)
+    (java.util Map Collection Arrays)
+    (java.util.function Function)
+    (pseidon_etl FormatMsgImpl TopicMsgImpl Util))
   (:require [thread-load.core :as load]
             [fun-utils.queue :as futils-queue]
             [pseidon-etl.memory :as memory]
@@ -46,10 +51,10 @@
 
 (defn- default-terminate [state & _] (assoc state :status :terminate))
 
-(defn _write-msg
-  "Msg can be an object or a byte array, the object is parsed to a json string and then the bytes are extracted"
-  ([state topic msg]
-    ;;msg must have type formats/FormatMsg
+(defn ^TopicMsgImpl wrap-msg
+  "Msg can be an object or a byte array, the object is parsed to a json string and then the bytes are extracted
+   "
+  ([state topic ^FormatMsgImpl msg]
    (try
      (let [output-format (topic-service/get-output-format topic (:conf state) (:db state))
            codec (condp = (name output-format)
@@ -59,19 +64,34 @@
                    "bzip2"   :bzip2
                    :gzip)]
 
-       ;note that only messages with a none nil node and batch-ts will be written to the etl map log
-       (writer/multi-write (:writer-ctx state) (writer/wrap-msg topic msg codec)))
+       (writer/wrap-msg topic msg codec))
      (catch Exception e
        (error e e)))))
 
 (defn exec-etl
   "For each message or messages run the do-etl-work!
    Binds the etl configuration to (:conf state)"
-  [req-metric state {:keys [topic bts]}]
-  (mark-meter req-metric 1)
+  [req-metric state msgs]
+  (mark-meter req-metric (count msgs))
   (let [conf (:conf state)
-        format (topic-service/get-format topic (:format-state state) conf (:db state))]
-    (_write-msg state topic (formats/bts->msg conf topic format bts))))
+        db (:db state)
+        format-state (:format-state state)
+
+        ^Function plugin-pipeline (:plugin-pipeline state)
+
+        msgs2 (map (fn [{:keys [topic bts]}]
+                     (let [format (topic-service/get-format topic format-state conf db)
+                           msg-map (formats/bts->msg conf topic format bts)]
+
+                       (wrap-msg state
+                                 topic
+                                 msg-map)))
+                   msgs)]
+
+    ;;msgs2 == (defrecord TopicMsg [^String topic msg codec])
+    ;; group by topic and send to pipeline
+    (doseq [[topic grouped-msgs] (group-by #(.getTopic ^TopicMsgImpl %) msgs2)]
+      (.apply plugin-pipeline (PMessage/instance (str topic) ^Collection grouped-msgs)))))
 
 (defn- metric->map [^Meter timer]
   {:count            (.getCount timer)
@@ -85,20 +105,24 @@
   [{:keys [node]} pool topic-status]
   (let [^AtomicLong counter (AtomicLong. 0)]
     (fn []
-      (while (not (Thread/interrupted))
-        ;loop forever till interrupted
-        (try
-          (loop [msg (read-msg! node)]
-            (when (and (not msg) (not (pos? (.get counter))))
-              (.incrementAndGet counter))
+      (let [buff-ch (buffered-msgs node 10000 500)
+            get-msg #(async/<!! buff-ch)]
 
-            (when msg
-              (load/publish! pool msg)
-              (recur (read-msg! node))))
-          (catch InterruptedException _ (-> (Thread/currentThread) (.interrupt)))
-          (catch Exception e (error e e))
-          (finally
-            (info "Exit etl publisher")))))))
+        (while (not (Thread/interrupted))
+          ;loop forever till interrupted
+          (try
+            (loop [msg (get-msg)]
+
+              (when (and (not msg) (not (pos? (.get counter))))
+                (.incrementAndGet counter))
+
+              (when msg
+                (load/publish! pool msg)
+                (recur (get-msg))))
+            (catch InterruptedException _ (-> (Thread/currentThread) (.interrupt)))
+            (catch Exception e (error e e))
+            (finally
+              )))))))
 
 (defn- shutdown-all [component]
   (util/wait-zero-activity! "etl" (get-in component [:etl-service :activity-counter]))
@@ -117,6 +141,36 @@
   (writer/multi-close (get-in component [:etl-service :writer-ctx]))
   (util/wait-till-no-files (get-in component [:conf :data-dir] "/tmp/"))
   (dissoc component :etl-service))
+
+(defn ^Plugin disk-writer-plugin
+  "Create a plugin that will use the writer namespace
+   and send for each message in the PMessage a call to writer/multi-write"
+  [state]
+  (let [writer-ctx (:writer-ctx state)]
+    (Util/asPlugin (fn [^PMessage pmsg]
+                     (doseq [msg (.getMessages pmsg)]
+                       (writer/multi-write writer-ctx msg))))))
+
+(defn transform-ks
+  "Transform the keys with f"
+  [f m]
+  (reduce-kv #(assoc %1 (f %2) %3) {} m))
+
+(defn ^Map default-plugins
+  "Create the default plugins that are available to the :plugins pipeline"
+  [state]
+  {"disk-writer" (disk-writer-plugin state)})
+
+(defn read-plugin-pipeline
+  "
+  Read the pluging pipeline from the config :plugins {}
+  If none is supplied a default pipeline of {:plugins {disk-writer ... :pipeline (-> disk-writer) }} is used
+  "
+  [state {:keys [plugins] :as conf}]
+
+  (if plugins
+    (PipelineParser/parse (Context/instance ^Map conf (default-plugins state)) (transform-ks name plugins))
+    (PipelineParser/parse (Context/instance ^Map conf (default-plugins state)) (transform-ks name {:pipeline '(-> disk-writer)}))))
 
 (defrecord ETLService [conf db topic-service kafka-node kafka-client writer-service monitor-service]
   component/Lifecycle
@@ -142,6 +196,7 @@
               topic-errors-ref (ref {})                     ;keep track of errors per topic
               shutdown-flag (AtomicBoolean. false)
 
+              consumer-batch-size (:consumer-batch-size (:conf component) 100)
 
               topic-status (atom {})
               pool (load/create-pool)                       ;queue-limit queue-type thread-pool
@@ -150,21 +205,23 @@
 
               writer-ctx (:writer-ctx writer-service)
 
-              state (assoc component
+              state1 (assoc component
                       :format-state (atom {})
                       :conf conf
                       :db db
                       :writer-ctx writer-ctx
                       :shutdown-flag shutdown-flag)
 
+              state (assoc state1 :plugin-pipeline (read-plugin-pipeline state1 conf))
+
               ^MetricRegistry metric-registry (MetricRegistry.)
               req-metric (.meter metric-registry "pseidon-etl-req-p/s")
 
               ^AtomicLong activity-counter (:activity-counter writer-service)
-              exec-f1 (fn [state msg]
-                        (when msg
+              exec-f1 (fn [state msgs]
+                        (when (not (empty? msgs))
                           (.incrementAndGet activity-counter)
-                          (exec-etl req-metric state msg)))
+                          (exec-etl req-metric state msgs)))
 
               exec-f (errors/handle-errors->fn db topic-errors-ref (get-in component [:conf :etl-error-threshold] 100) exec-f1)
 

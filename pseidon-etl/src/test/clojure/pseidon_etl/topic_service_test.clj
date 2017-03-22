@@ -18,6 +18,9 @@
 
 (defonce state-ref (ref {}))
 
+(defonce TOPIC1 (str "test1-" (System/nanoTime)))
+(defonce TOPIC2 (str "test2-" (System/nanoTime)))
+
 
 (defn- setup-database [db]
   (create-db-tables db)
@@ -26,7 +29,7 @@
                    (j/insert-values
                      :pseidon_logs
                      [:log :log_group :enabled]
-                     ["test1" "etl" 1])))
+                     [TOPIC1 "etl" 1])))
 
 
 (defn- insert-logs [db values]
@@ -43,7 +46,7 @@
                      {:enabled enabled})))
 
 (defn- load-resources []
-  (let [resources (startup-resources "test1" "test2")]
+  (let [resources (startup-resources TOPIC1 TOPIC2)]
     (dosync (alter state-ref assoc :resources resources))
     resources))
 
@@ -64,7 +67,7 @@
       (component/system-map
         :db db
         :writer-service (writer-service conf)
-        :kafka-node (create-test-kafka-node-service (-> state-ref deref :resources) ["test1" "test2"])
+        :kafka-node (create-test-kafka-node-service (-> state-ref deref :resources) [TOPIC1 TOPIC2])
         :topic-service (component/using
                          (create-topic-service {:topic-refresh-freq-ms 500 :etl-group "etl"})
                          {:database :db
@@ -86,4 +89,4 @@
                       (fact "Test add and remove topics"
                             (insert-logs (-> state-ref deref :system :db) ["test2" "etl" 1])
                             (Thread/sleep 1000)
-                            (-> state-ref deref :system :kafka-node :node :topics-ref deref) => #{"test1" "test2"})))
+                            (-> state-ref deref :system :kafka-node :node :topics-ref deref) => #{TOPIC1 TOPIC2})))

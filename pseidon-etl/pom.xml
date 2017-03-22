@@ -4,16 +4,17 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-       <groupId>pseidon</groupId>
+       <groupId>com.steppechange.dmp_research</groupId>
        <artifactId>pseidon-parent</artifactId>
        <version>1.0</version>
+       <relativePath>../</relativePath>
     </parent>
 
-    <groupId>pseidon-etl</groupId>
+    <groupId>com.steppechange.dmp_research</groupId>
     <artifactId>pseidon-etl</artifactId>
     <packaging>jar</packaging>
     <name>pseidon-etl</name>
-    <version>0.1.0</version>
+    <version>0.1.0-SNAPSHOT</version>
     <description>Kafka to local disk import</description>
 
     <url>github.com/gerritjvv/pseidon</url>
@@ -408,11 +409,6 @@
             <version>0.4</version>
         </dependency>
         <dependency>
-            <groupId>com.foursquare</groupId>
-            <artifactId>heapaudit</artifactId>
-            <version>1.1.5</version>
-        </dependency>
-        <dependency>
             <groupId>com.google.protobuf</groupId>
             <artifactId>protobuf-java</artifactId>
             <version>2.6.0</version>
@@ -674,7 +670,7 @@
         <dependency>
             <groupId>fileape</groupId>
             <artifactId>fileape</artifactId>
-            <version>1.2.0-SNAPSHOT</version>
+            <version>2.0.0-SNAPSHOT</version>
             <exclusions>
                 <exclusion>
                     <groupId>org.apache.hadoop</groupId>
@@ -756,7 +752,7 @@
             <groupId>org.apache.kafka</groupId>
             <artifactId>kafka_2.10</artifactId>
             <version>0.10.1.0</version>
-            <scope>test</scope>
+            <!--<scope>test</scope>-->
         </dependency>
         <dependency>
             <groupId>com.github.kstyrc</groupId>
