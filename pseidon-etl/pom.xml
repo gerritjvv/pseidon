@@ -6,7 +6,7 @@
     <parent>
        <groupId>com.steppechange.dmp_research</groupId>
        <artifactId>pseidon-parent</artifactId>
-       <version>1.0</version>
+       <version>0.1.0-SNAPSHOT</version>
        <relativePath>../</relativePath>
     </parent>
 
@@ -14,7 +14,6 @@
     <artifactId>pseidon-etl</artifactId>
     <packaging>jar</packaging>
     <name>pseidon-etl</name>
-    <version>0.1.0-SNAPSHOT</version>
     <description>Kafka to local disk import</description>
 
     <url>github.com/gerritjvv/pseidon</url>
@@ -396,7 +395,7 @@
         <dependency>
             <groupId>com.steppechange.dmp_research</groupId>
             <artifactId>pseidon-plugin</artifactId>
-            <version>0.1.0-SNAPSHOT</version>
+            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>commons-codec</groupId>
