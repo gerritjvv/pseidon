@@ -13,6 +13,7 @@
         <module>pseidon-hdfs</module>
         <module>pseidon-plugin</module>
     <module>pseidon-api</module>
+    <module>solr-plugin-demo</module>
   </modules>
 
     <profiles>

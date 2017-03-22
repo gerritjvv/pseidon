@@ -105,17 +105,18 @@
       ;;;;       currently avro messages are just wrappers where the first message is the timestamp and the second is the plain txt message
       ;;;;       ALSO this probably needs to be handled in the FOMRAT itself thus if we call msg->bts we get the bts.
       ;;;;       even better would be to do format/write! ape so that the format itself figures out how to write based on its output codec
-      ;(= codec :avro)
-      ;(ape-core/write-timeout
-      ;  ctx k
-      ;  (fn [{:keys [avro]}]
-      ;    (doseq [topic-msg msgs]
-      ;      (try
-      ;        (ape-avro-writer/write! avro (:msg topic-msg))
-      ;        (catch Exception e (do
-      ;                             (error e (clj-json/generate-string {:topic (:topic topic-msg)
-      ;                                                                 :e     (str e)})))))))
-      ;  600000)
+      (= codec :avro)
+      (ape-core/write-timeout
+        ctx k
+        (fn [{:keys [avro]}]
+          (doseq [topic-msg msgs]
+            (try
+              ;;; NOTE: the topic schema for avro must be exactly the same as for the :msg written
+              (ape-avro-writer/write! avro (:msg topic-msg))
+              (catch Exception e (do
+                                   (error e (clj-json/generate-string {:topic (:topic topic-msg)
+                                                                       :e     (str e)})))))))
+        600000)
 
       (= codec :parquet)
 
