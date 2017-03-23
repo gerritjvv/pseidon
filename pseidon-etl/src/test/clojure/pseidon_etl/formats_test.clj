@@ -6,20 +6,36 @@
 (deftest test-parse-format
   (is (= (formats/parse-format "txt:ts=0;sep=byte1") (formats/->Format "txt" {"ts" 0 "sep" "byte1"}))))
 
-(deftest test-bts->msg
+(deftest test-extract-message-from-txt
 
-        (let [topic "testtopic"
-              conf {}
-              ts  (System/currentTimeMillis)
-              input-str (str ts \u0001 "hi")
-              bts (.getBytes input-str)
-              f   (formats/parse-format "txt:ts=0;sep=byte1")
-              msg (formats/bts->msg conf topic f bts)
-              msg-str (formats/msg->string conf topic f msg)]
+  (let [topic "testtopic"
+        conf {}
+        ts  (System/currentTimeMillis)
+        input-str (str ts \u0001 "hi")
+        bts (.getBytes input-str)
+        f   (formats/format-descriptor (atom {}) {} (formats/parse-format "txt:ts=0;sep=byte1;msg=1"))
+        msg (formats/bts->msg conf topic f bts)
+        _ (do (prn "msg >>>>>>>>>>> " msg))
+        msg-str (formats/msg->string conf topic f msg)]
 
 
-          (is (= (into [] (:msg msg)) [(str ts) "hi"]))
-          (is (= (:ts msg) ts))
-          (is (= (:bts msg) bts))
+    (is (= msg-str "hi"))))
 
-          (is (= input-str msg-str))))
+;(deftest test-bts->msg
+;
+;        (let [topic "testtopic"
+;              conf {}
+;              ts  (System/currentTimeMillis)
+;              input-str (str ts \u0001 "hi")
+;              bts (.getBytes input-str)
+;              f   (formats/format-descriptor (atom {}) {} (formats/parse-format "txt:ts=0;sep=byte1;msg=-1"))
+;
+;              msg (formats/bts->msg conf topic f bts)
+;              msg-str (formats/msg->string conf topic f msg)]
+;
+;
+;          (is (= (into [] (:msg msg)) [(str ts) "hi"]))
+;          (is (= (:ts msg) ts))
+;          (is (= (:bts msg) bts))
+;
+;          (is (= input-str msg-str))))
