@@ -34,6 +34,7 @@
           "}
   pseidon-etl.formats
   (:require [clojure.string :as string]
+	    [clojure.tools.logging :refer [info]]
             [clj-time.coerce :as c])
   (:import (java.util Map Date Arrays)
            (org.apache.commons.lang3 StringUtils)
@@ -176,6 +177,7 @@
 (defmethod bts->msg "txt" [_ _ format bts]
   (let [msg (txt->msg format bts)
         ts ((:ts-parser format) msg)]
+    (info "Got: " (String. (bytes bts)) " ts= " ts " msg= " msg   "format= " format) 
     (->FormatMsg format ts bts msg)))
 
 (defmethod msg->string "txt" [_ _ format ^FormatMsgImpl msg]
