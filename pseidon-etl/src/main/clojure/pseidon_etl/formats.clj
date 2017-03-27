@@ -195,5 +195,5 @@
       (StringUtils/join ^"[Ljava.lang.String;" (wrappedMsg) (char (split-type format))))))
 
 (defmethod msg->bts "txt" [_ _ _ ^FormatMsgImpl msg]
-  (.getBts msg))
+  (.getBytes (.getMsg msg) "UTF-8"))
 

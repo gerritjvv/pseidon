@@ -29,9 +29,9 @@
         f (formats/format-descriptor (atom {}) {} (formats/parse-format "txt:sep=pipe;ts_sec=3;msg=1"))
         format-msg (formats/bts->msg {} topic f bts)]
 
-    (is
-      (expected-ts? (:ts format-msg))
-      (= (:msg format-msg) expected-msg))))
+    (is (expected-ts? (:ts format-msg)))
+    (is (= (:msg format-msg) expected-msg))
+    (is (= (:msg format-msg) (String. (bytes (formats/msg->bts {} topic f format-msg)) "UTF-8")))))
 
 (deftest test-extract-time-from-txt
   (test-message-extract-helper "txt:sep=pipe;ts=3;msg=1"
