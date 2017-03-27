@@ -115,7 +115,7 @@
     date))
 
 (defn file-name->topic [file]
-  (->> file io/file .getName (re-find #"(.+)-\d\d\d\d-\d\d-\d\d-\d\d") second))
+  (->> file io/file .getName (re-find #"(.+)-\d+-\d\d-\d\d-\d\d") second))
 
 (defn create-remote-file-name ^String [base-dir date_format topic-partition file]
   (let [file-name (-> file io/file .getName)
