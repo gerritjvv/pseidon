@@ -15,27 +15,37 @@
         bts (.getBytes input-str)
         f   (formats/format-descriptor (atom {}) {} (formats/parse-format "txt:ts=0;sep=byte1;msg=1"))
         msg (formats/bts->msg conf topic f bts)
-        _ (do (prn "msg >>>>>>>>>>> " msg))
+
         msg-str (formats/msg->string conf topic f msg)]
 
 
     (is (= msg-str "hi"))))
 
-;(deftest test-bts->msg
-;
-;        (let [topic "testtopic"
-;              conf {}
-;              ts  (System/currentTimeMillis)
-;              input-str (str ts \u0001 "hi")
-;              bts (.getBytes input-str)
-;              f   (formats/format-descriptor (atom {}) {} (formats/parse-format "txt:ts=0;sep=byte1;msg=-1"))
-;
-;              msg (formats/bts->msg conf topic f bts)
-;              msg-str (formats/msg->string conf topic f msg)]
-;
-;
-;          (is (= (into [] (:msg msg)) [(str ts) "hi"]))
-;          (is (= (:ts msg) ts))
-;          (is (= (:bts msg) bts))
-;
-;          (is (= input-str msg-str))))
+
+(defn test-message-extract-helper [format-str expected-ts? expected-msg]
+  (let [topic "test"
+        msg "5|aasdfghjkl|adfgasdgsd|315532800|dsfsdfdsf"
+        bts (.getBytes (str msg))
+        f (formats/format-descriptor (atom {}) {} (formats/parse-format "txt:sep=pipe;ts_sec=3;msg=1"))
+        format-msg (formats/bts->msg {} topic f bts)]
+
+    (is
+      (expected-ts? (:ts format-msg))
+      (= (:msg format-msg) expected-msg))))
+
+(deftest test-extract-time-from-txt
+  (test-message-extract-helper "txt:sep=pipe;ts=3;msg=1"
+                               #(= % 315532800)
+                               "aasdfghjkl"))
+
+(deftest test-extract-time-from-txt
+  (test-message-extract-helper "txt:sep=pipe;ts_sec=3;msg=1"
+                               #(= % (* 315532800 1000))
+                               "aasdfghjkl"))
+
+(deftest test-use-current-time-always-from-txt
+  (test-message-extract-helper "txt:sep=pipe;ts_sec=-1;msg=1"
+                               #(< (- % (System/currentTimeMillis)) 10000) ;;check that the time is within 10 seconds,
+                               ;; the time will never reliably be exrtact current mills as seen in the format method and in this test because the happen at different times
+                               "aasdfghjkl"))
+
