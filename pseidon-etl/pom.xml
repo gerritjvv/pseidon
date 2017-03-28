@@ -206,7 +206,7 @@
                                     <paths>
                                         <path>${basedir}/src/main/resources/conf/parquet.logging.properties</path>
                                         <path>${basedir}/src/main/resources/conf/pseidon.edn</path>
-                                        <path>${basedir}/src/main/resources/conf/log4j.properties</path>
+                                        <path>${basedir}/src/main/resources/conf/log4j.xml</path>
                                     </paths>
 
                                     <type>files</type>
