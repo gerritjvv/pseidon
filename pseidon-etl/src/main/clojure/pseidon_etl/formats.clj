@@ -35,9 +35,10 @@
   pseidon-etl.formats
   (:require [clojure.string :as string]
             [clj-time.coerce :as c])
-  (:import (java.util Map Date)
+  (:import (java.util Map Date Arrays)
            (org.apache.commons.lang3 StringUtils)
-           (pseidon_etl FormatMsgImpl)))
+           (pseidon_etl FormatMsgImpl)
+           (org.apache.avro.generic IndexedRecord)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;; Data Types and multimethods
@@ -67,6 +68,25 @@
 (defonce SPACE \space)
 
 
+;;;; indexed protocol to add support for IndexedRecord
+(defprotocol IIndexed
+  (-nth [v i]))
+
+(extend-protocol
+
+  IIndexed
+
+  IndexedRecord
+  (-nth [r i] (.get ^IndexedRecord r (int i)))
+
+  Object
+  (-nth [r i] (nth r i)))
+
+(defn cast-long [v]
+  (if (instance? Number v)
+    (long v)
+    (Long/parseLong (str v))))
+
 (defn ts->long ^long [ts]
   (cond
     (number? ts) (long ts)
@@ -75,14 +95,30 @@
 
     :else (System/currentTimeMillis)))
 
+(defn ts-parser
+  "Return a timestamp parser function"
+  [props]
+  (cond
+    (or (get props "ts") (get props "ts_ms")) (let [index (Integer/parseInt (str (get props "ts" (get props "ts_ms"))))]
+                                                (if (> index -1)
+                                                  (fn [record] (ts->long (-nth record (int index))))
+                                                  (fn [_] (System/currentTimeMillis))))
+
+    (get props "ts_sec") (let [index (Integer/parseInt (str (get props "ts_sec")))]
+                           (fn [record] (* (long (ts->long (-nth record (int index)))) 1000)))
+
+    :else
+    (throw (RuntimeException. (str "format must contain either a ts, ts_sec or ts_ms parameter to identify the index of the timestamp")))))
+
+
 (defn parse-special-split-words [^String sep-str]
   (condp = sep-str
     "byte1" BYTE1
-    "tab"   TAB
+    "tab" TAB
     "space" SPACE
     "semicolon" \;
-    "pipe"    \|
-    "comma"   \,
+    "pipe" \|
+    "comma" \,
 
     :else BYTE1))
 
@@ -104,7 +140,7 @@
 (defn vals-as-map [xs]
   (reduce (fn [m [k v]] (assoc m k (cast-value v))) {} (partition 2 xs)))
 
-(defn  parse-format
+(defn parse-format
   "Return record{:props, :type}"
   [^String input]
   (let [[type args] (string/split input #":")
@@ -116,27 +152,37 @@
 
 ;;;;;;; default
 
-(defmethod format-descriptor :default [_ _ format] format)
+(defn msg-parser
+  "If msg is undefined or -1 an identify function is returned, otherwise a function that looks up the index msg is returned"
+  [props]
+  (let [msg-index (cast-long (get props "msg" "-1"))]
+    (if (pos? msg-index)
+      #(-nth % msg-index)
+      identity)))
+
+(defmethod format-descriptor :default [_ _ format]
+  (assoc
+    format
+    :ts-parser (ts-parser (:props format))
+    :msg-parser (msg-parser (:props format))))
+
 (defmethod dispose-format :default [_ _ _])
 
 ;;;;;;; txt support
 
-(defn txtmsg->ts ^long [format msg]
-  (let [ts-index (get (:props format) "ts")]
-    (if (number? ts-index)
-      (ts->long (nth msg ts-index))
-      (System/currentTimeMillis))))
-
 (defn txt->msg [format ^"[B" bts]
-  (StringUtils/split (String. bts "UTF-8") (char (split-type format))))
+  ((:msg-parser format) (StringUtils/split (String. bts "UTF-8") (char (split-type format)))))
 
 (defmethod bts->msg "txt" [_ _ format bts]
   (let [msg (txt->msg format bts)
-        ts (txtmsg->ts format msg)]
+        ts ((:ts-parser format) msg)]
     (->FormatMsg format ts bts msg)))
 
-(defmethod msg->string "txt" [_ _ _ ^FormatMsgImpl msg]
-  (String. ^"[B" (.getBts msg) "UTF-8"))
+(defmethod msg->string "txt" [_ _ format ^FormatMsgImpl msg]
+  (let [wrappedMsg (:msg msg)]
+    (if (instance? String wrappedMsg)
+      wrappedMsg
+      (StringUtils/join ^"[Ljava.lang.String;" (wrappedMsg) (char (split-type format))))))
 
 (defmethod msg->bts "txt" [_ _ _ ^FormatMsgImpl msg]
   (.getBts msg))

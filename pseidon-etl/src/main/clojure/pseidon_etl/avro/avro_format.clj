@@ -67,17 +67,7 @@
 
         props (:props format)
 
-        ts-parser (cond
-                    (or (get props "ts") (get props "ts_ms")) (let [index (Integer/parseInt (str (get props "ts" (get props "ts_ms"))))]
-                                                                (if (> index -1)
-                                                                  (fn [^IndexedRecord record] (.get record (int index)))
-                                                                  (fn [_] (System/currentTimeMillis))))
-
-                    (get props "ts_sec") (let [index (Integer/parseInt (str (get props "ts_sec")))]
-                                           (fn [^IndexedRecord record] (* (long (.get record (int index))) 1000)))
-
-                    :else
-                    (throw (RuntimeException. (str "avro format must contain either a ts, ts_sec or ts_ms parameter to identify the index of the timestamp"))))
+        ts-parser (formats/ts-parser props)
 
         msg-index (get (:props format) "msg")]
 
