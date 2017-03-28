@@ -5,23 +5,24 @@
            (org.apache.commons.lang3 StringUtils)))
 
 
+(def pseidon-home (let [env (System/getenv "PSEIDON_HOME")]
+                    (if (StringUtils/isNotEmpty (str env))
+                      (str env)
+                      "/opt/pseidon-etl/")))
 (defn cmd [& args]
   (doto (CommandLine. (str "test")) (.addArguments (into-array String args))))
 
 (defn run-process [cmd-bash args]
-  (let [pseidon-home (let [env (System/getenv "PSEIDON_HOME")]
-                       (if (StringUtils/isNotEmpty (str env))
-                         (str env)
-                         "/opt/pseidon-etl/"))
+  (let [
         ^ProcessDestroyer destroyer (ShutdownHookProcessDestroyer.)
         ^CommandLine cmd (doto (CommandLine. (str cmd-bash)) (.addArguments (into-array String (mapv str args))))
         ^ExecuteWatchdog watchdog (ExecuteWatchdog. ExecuteWatchdog/INFINITE_TIMEOUT)
         ^DefaultExecuteResultHandler handler (DefaultExecuteResultHandler.)
         ^DefaultExecutor exec (doto (DefaultExecutor.) (.setExitValue 1) (.setWatchdog watchdog) (.setProcessDestroyer destroyer)
-                                                       (.setWorkingDirectory (clojure.java.io/file "/opt/pseidon-etl")))]
+                                                       (.setWorkingDirectory (clojure.java.io/file pseidon-home)))]
     (info "Starting managed pseidon process " cmd-bash)
     (.execute exec cmd handler)
-    (prn "see /opt/pseidon-etl/log/serverlog.log")
+    (prn "see " pseidon-home "/log/serverlog.log")
     [handler exec]))
 
 (defn restart-process? [^DefaultExecuteResultHandler handler]
@@ -52,8 +53,8 @@
 
 (defn add-shutdown-hook []
   (let [^Runnable f (fn [] (reset! shutdown? true))]
-    (-> (Runtime/getRuntime) (.addShutdownHook  (Thread. f)))))
+    (-> (Runtime/getRuntime) (.addShutdownHook (Thread. f)))))
 
 (defn -main [& args]
   (add-shutdown-hook)
-  (start-managed "/opt/pseidon-etl/bin/process.sh" args))
+  (start-managed (str pseidon-home "/bin/process.sh") args))
