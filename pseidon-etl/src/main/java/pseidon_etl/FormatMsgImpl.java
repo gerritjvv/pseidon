@@ -1,5 +1,6 @@
 package pseidon_etl;
 
+import clojure.lang.ISeq;
 import clojure.lang.Keyword;
 import clojure.lang.PersistentArrayMap;
 import pseidon.plugin.FormatMsg;
@@ -93,4 +94,6 @@ public class FormatMsgImpl extends PersistentArrayMap implements FormatMsg {
                 ", msg=" + msg +
                 '}';
     }
+
+
 }

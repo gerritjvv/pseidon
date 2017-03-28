@@ -34,7 +34,7 @@
             [pseidon-etl.avro.avro-format]
             ))
 
-(defonce ETL-VERSION "0.1.0")
+(defonce ETL-VERSION "0.1.1-SNAPSHOT")
 
 ;note this must be a function otherwise the available processors will be read at compile time
 (defn cpu-count [] (.availableProcessors (Runtime/getRuntime)))

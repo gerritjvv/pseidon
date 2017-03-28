@@ -34,6 +34,7 @@
           "}
   pseidon-etl.formats
   (:require [clojure.string :as string]
+	    [clojure.tools.logging :refer [info]]
             [clj-time.coerce :as c])
   (:import (java.util Map Date Arrays)
            (org.apache.commons.lang3 StringUtils)
@@ -100,12 +101,18 @@
   [props]
   (cond
     (or (get props "ts") (get props "ts_ms")) (let [index (Integer/parseInt (str (get props "ts" (get props "ts_ms"))))]
+
                                                 (if (> index -1)
                                                   (fn [record] (ts->long (-nth record (int index))))
                                                   (fn [_] (System/currentTimeMillis))))
 
     (get props "ts_sec") (let [index (Integer/parseInt (str (get props "ts_sec")))]
-                           (fn [record] (* (long (ts->long (-nth record (int index)))) 1000)))
+
+                           (if (> index -1)
+                             (fn [record]
+                               (* (long (ts->long (-nth record (int index)))) 1000))
+                             (fn [_]
+                               (System/currentTimeMillis))))
 
     :else
     (throw (RuntimeException. (str "format must contain either a ts, ts_sec or ts_ms parameter to identify the index of the timestamp")))))
@@ -170,12 +177,15 @@
 
 ;;;;;;; txt support
 
-(defn txt->msg [format ^"[B" bts]
-  ((:msg-parser format) (StringUtils/split (String. bts "UTF-8") (char (split-type format)))))
+(defn split-message [format ^"[B" bts]
+  (StringUtils/split (String. bts "UTF-8") (char (split-type format))))
 
 (defmethod bts->msg "txt" [_ _ format bts]
-  (let [msg (txt->msg format bts)
-        ts ((:ts-parser format) msg)]
+  (let [split-msg (split-message format bts)
+
+        msg ((:msg-parser format) split-msg)
+        ts ((:ts-parser format) split-msg)]
+    ;(info "Got: " (String. (bytes bts)) " ts= " ts " msg= " msg   "format= " format)
     (->FormatMsg format ts bts msg)))
 
 (defmethod msg->string "txt" [_ _ format ^FormatMsgImpl msg]
@@ -185,5 +195,5 @@
       (StringUtils/join ^"[Ljava.lang.String;" (wrappedMsg) (char (split-type format))))))
 
 (defmethod msg->bts "txt" [_ _ _ ^FormatMsgImpl msg]
-  (.getBts msg))
+  (.getBytes (.getMsg msg) "UTF-8"))
 
