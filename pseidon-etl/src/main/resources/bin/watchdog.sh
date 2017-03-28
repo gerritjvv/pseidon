@@ -14,7 +14,7 @@ BIN_HOME=`dirname $abspath`
 
 if [ -z "$PSEIDON_HOME" ]; then
  DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
- PSEIDON_HOME="${DIR}../"
+ PSEIDON_HOME="${DIR}/.."
 fi
 
 export CONF_DIR=$PSEIDON_HOME/conf
