@@ -1,14 +1,19 @@
 (ns pseidon-etl.watchdog
   (:gen-class)
   (:require [clojure.tools.logging :refer [info error]])
-  (:import [org.apache.commons.exec CommandLine DefaultExecuteResultHandler DefaultExecutor ExecuteWatchdog ProcessDestroyer ShutdownHookProcessDestroyer]))
+  (:import [org.apache.commons.exec CommandLine DefaultExecuteResultHandler DefaultExecutor ExecuteWatchdog ProcessDestroyer ShutdownHookProcessDestroyer]
+           (org.apache.commons.lang3 StringUtils)))
 
 
 (defn cmd [& args]
   (doto (CommandLine. (str "test")) (.addArguments (into-array String args))))
 
 (defn run-process [cmd-bash args]
-  (let [^ProcessDestroyer destroyer (ShutdownHookProcessDestroyer.)
+  (let [pseidon-home (let [env (System/getenv "PSEIDON_HOME")]
+                       (if (StringUtils/isNotEmpty (str env))
+                         (str env)
+                         "/opt/pseidon-etl/"))
+        ^ProcessDestroyer destroyer (ShutdownHookProcessDestroyer.)
         ^CommandLine cmd (doto (CommandLine. (str cmd-bash)) (.addArguments (into-array String (mapv str args))))
         ^ExecuteWatchdog watchdog (ExecuteWatchdog. ExecuteWatchdog/INFINITE_TIMEOUT)
         ^DefaultExecuteResultHandler handler (DefaultExecuteResultHandler.)
