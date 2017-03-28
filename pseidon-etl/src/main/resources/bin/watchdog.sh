@@ -12,7 +12,10 @@
 abspath=$(cd ${0%/*} && echo $PWD/${0##*/})
 BIN_HOME=`dirname $abspath`
 
-PSEIDON_HOME=/opt/pseidon-etl
+if [ -z "$PSEIDON_HOME" ]; then
+ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+ PSEIDON_HOME="${DIR}../"
+fi
 
 export CONF_DIR=$PSEIDON_HOME/conf
 

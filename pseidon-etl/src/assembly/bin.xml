@@ -1,0 +1,44 @@
+<assembly xmlns="http://maven.apache.org/ASSEMBLY/2.0.0"
+          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xsi:schemaLocation="http://maven.apache.org/ASSEMBLY/2.0.0 http://maven.apache.org/xsd/assembly-2.0.0.xsd">
+    <id>bin</id>
+    <formats>
+        <format>tar.gz</format>
+    </formats>
+
+
+    <files>
+        <file>
+            <source>${project.build.directory}/${project.name}-${project.version}-jar-with-dependencies.jar</source>
+            <outputDirectory>/lib/</outputDirectory>
+            <destName>${project.name}.jar</destName>
+        </file>
+        <file>
+            <source>${project.build.directory}/classes/bin/process.sh</source>
+            <outputDirectory>/bin/</outputDirectory>
+            <destName>process.sh</destName>
+            <fileMode>775</fileMode>
+        </file>
+        <file>
+            <source>${project.build.directory}/classes/bin/watchdog.sh</source>
+            <outputDirectory>/bin/</outputDirectory>
+            <destName>watchdog.sh</destName>
+            <fileMode>775</fileMode>
+        </file>
+        <file>
+            <source>${project.build.directory}/classes/conf/pseidon.edn</source>
+            <outputDirectory>/conf/</outputDirectory>
+            <destName>pseidon.edn</destName>
+        </file>
+        <file>
+            <source>${project.build.directory}/classes/conf/log4j.xml</source>
+            <outputDirectory>/conf/</outputDirectory>
+            <destName>log4j.xml</destName>
+        </file>
+        <file>
+            <source>${project.build.directory}/classes/conf/parquet.logging.properties</source>
+            <outputDirectory>/conf/</outputDirectory>
+            <destName>parquet.logging.properties</destName>
+        </file>
+    </files>
+</assembly>
