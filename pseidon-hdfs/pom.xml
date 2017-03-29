@@ -121,6 +121,18 @@
                             <goal>single</goal>
                         </goals>
                     </execution>
+                    <execution>
+                        <id>dist</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
+                        <configuration>
+                            <descriptors>
+                                <descriptor>src/assembly/bin.xml</descriptor>
+                            </descriptors>
+                        </configuration>
+                    </execution>
                 </executions>
                 <configuration>
                     <descriptorRefs>

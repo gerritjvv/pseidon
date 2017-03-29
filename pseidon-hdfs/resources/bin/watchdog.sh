@@ -7,7 +7,9 @@
 abspath=$(cd ${0%/*} && echo $PWD/${0##*/})
 BIN_HOME=`dirname $abspath`
 
-PSEIDON_HOME=/opt/pseidon-hdfs
+if [ -z "$PSEIDON_HOME" ]; then
+ PSEIDON_HOME="${BIN_HOME}/.."
+fi
 
 export CONF_DIR=$PSEIDON_HOME/conf
 

@@ -1,19 +1,26 @@
 (ns pseidon-hdfs.watchdog
   (:gen-class)
   (:require [clojure.tools.logging :refer [info error]])
-  (:import [org.apache.commons.exec CommandLine DefaultExecuteResultHandler DefaultExecutor ExecuteWatchdog ProcessDestroyer ShutdownHookProcessDestroyer]))
+  (:import [org.apache.commons.exec CommandLine DefaultExecuteResultHandler DefaultExecutor ExecuteWatchdog ProcessDestroyer ShutdownHookProcessDestroyer]
+           (org.apache.commons.lang3 StringUtils)))
 
+
+(def pseidon-home (let [env (System/getenv "PSEIDON_HOME")]
+                    (if (StringUtils/isNotEmpty (str env))
+                      (str env)
+                      "/opt/pseidon-hdfs/")))
 
 (defn run-process [cmd-bash args]
-  (let [^ProcessDestroyer destroyer (ShutdownHookProcessDestroyer.)
+  (let [
+        ^ProcessDestroyer destroyer (ShutdownHookProcessDestroyer.)
         ^CommandLine cmd (doto (CommandLine. (str cmd-bash)) (.addArguments (into-array args)))
         ^ExecuteWatchdog watchdog (ExecuteWatchdog. ExecuteWatchdog/INFINITE_TIMEOUT)
         ^DefaultExecuteResultHandler handler (DefaultExecuteResultHandler.)
         ^DefaultExecutor exec (doto (DefaultExecutor.) (.setExitValue 1) (.setWatchdog watchdog) (.setProcessDestroyer destroyer)
-                                                       (.setWorkingDirectory (clojure.java.io/file "/opt/pseidon-hdfs")))]
+                                                       (.setWorkingDirectory (clojure.java.io/file pseidon-home)))]
     (info "Starting managed pseidon process " cmd-bash)
     (.execute exec cmd handler)
-    (prn "see /opt/pseidon-hdfs/log/serverlog.log")
+    (prn (str "see " pseidon-home "/log/serverlog.log"))
     [handler exec]))
 
 (defn restart-process? [^DefaultExecuteResultHandler handler]
@@ -47,4 +54,4 @@
 
 (defn -main [& args]
   (add-shutdown-hook)
-  (start-managed "/opt/pseidon-hdfs/bin/process.sh" args))
+  (start-managed (str pseidon-home "/bin/process.sh") args))
