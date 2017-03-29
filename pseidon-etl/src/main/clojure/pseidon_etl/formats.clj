@@ -44,6 +44,8 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;; Data Types and multimethods
 
+(defonce ^Class ARRAY-TYPE (Class/forName "[Ljava.lang.String;"))
+
 (defrecord Format [^String type ^Map props])
 
 (defmulti bts->msg (fn [conf topic format bts] (:type format)))
@@ -152,6 +154,7 @@
   [^String input]
   (let [[type args] (string/split input #":")
         props (vals-as-map (string/split args #"[=;]"))]
+
     (->Format (str type) ^Map props)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -159,19 +162,46 @@
 
 ;;;;;;; default
 
+(defn bytes-parser
+  "The inverse of msg-parser, and returns a function msg-format,msg[] -> byte[]"
+  [props]
+  (let [msg-index (cast-long (get props "msg" "-1"))]
+    (if (pos? msg-index)
+      (fn [_ ^FormatMsgImpl msg] (.getBytes (str (:msg msg)) "UTF-8"))
+      (fn [_ ^FormatMsgImpl msg]
+        (:bts msg)))))
+
+
 (defn msg-parser
   "If msg is undefined or -1 an identify function is returned, otherwise a function that looks up the index msg is returned"
   [props]
   (let [msg-index (cast-long (get props "msg" "-1"))]
-    (if (pos? msg-index)
-      #(-nth % msg-index)
-      identity)))
 
-(defmethod format-descriptor :default [_ _ format]
+    (if (pos? msg-index)
+      (fn [_ msg] (-nth msg msg-index))
+      (fn [_ msg] msg))))
+
+(defn txt-msg-parser
+  [props]
+  (let [msg-index (cast-long (get props "msg" "-1"))]
+    (if (pos? msg-index)
+      (fn [_ msg] (-nth msg msg-index))
+      (fn [^"[B" bts msg] (String. bts "UTF-8")))))
+
+(defn default-format-descriptor [format]
   (assoc
     format
+    :bts-parser (bytes-parser (:props format))
     :ts-parser (ts-parser (:props format))
     :msg-parser (msg-parser (:props format))))
+
+(defmethod format-descriptor :default [_ _ format]
+  (default-format-descriptor format))
+
+(defmethod format-descriptor "txt" [_ _ format]
+  (assoc
+    (default-format-descriptor format)
+    :msg-parser (txt-msg-parser (:props format))))
 
 (defmethod dispose-format :default [_ _ _])
 
@@ -183,7 +213,7 @@
 (defmethod bts->msg "txt" [_ _ format bts]
   (let [split-msg (split-message format bts)
 
-        msg ((:msg-parser format) split-msg)
+        msg ((:msg-parser format) bts split-msg)
         ts ((:ts-parser format) split-msg)]
     ;(info "Got: " (String. (bytes bts)) " ts= " ts " msg= " msg   "format= " format)
     (->FormatMsg format ts bts msg)))
@@ -194,6 +224,6 @@
       wrappedMsg
       (StringUtils/join ^"[Ljava.lang.String;" (wrappedMsg) (char (split-type format))))))
 
-(defmethod msg->bts "txt" [_ _ _ ^FormatMsgImpl msg]
-  (.getBytes (.getMsg msg) "UTF-8"))
+(defmethod msg->bts "txt" [_ _ format ^FormatMsgImpl msg]
+  ((:bts-parser format) format msg))
 
