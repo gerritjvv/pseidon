@@ -25,6 +25,23 @@ The pseidon-etl uses the following tables:
 ```clojure
 :writer {:parallel-files 1 :out-buffer-size 500000 :use-buffer false :flush-on-write true :write-multiplier 1}
 ```
+#### Formats
+
+Several formats are built in.
+
+**txt**
+
+"txt:sep=pipe;msg=1:-1;ts=0" => txt message separated by pipe, return message at index 1 till end of message.
+
+The msg property takes a python style splice pair separated by the ':' char.
+
+**avro-txt**
+
+
+"avro-txt:ts=0;msg=1" => timestamp in millis at index 0, and messages at index 1
+
+Reads avro messages and writes out txt output.
+
 
 #### Plugins
 

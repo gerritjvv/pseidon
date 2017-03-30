@@ -41,66 +41,59 @@
   (test-message-extract-helper "txt:sep=pipe;ts=3;msg=1"
                                #(= % 315532800)
                                (into-array String ["aasdfghjkl"])))
-;
-;(deftest test-extract-time-from-txt
-;  (test-message-extract-helper "txt:sep=pipe;ts_sec=3;msg=1"
-;                               #(= % (* 315532800 1000))
-;                               "aasdfghjkl"))
-;
-;(deftest test-use-current-time-always-from-txt
-;  (test-message-extract-helper "txt:sep=pipe;ts_sec=-1;msg=1"
-;                               #(< (- % (System/currentTimeMillis)) 10000) ;;check that the time is within 10 seconds,
-;                               ;; the time will never reliably be exrtact current mills as seen in the format method and in this test because the happen at different times
-;                               "aasdfghjkl"))
-;
-;
-;(deftest test-extract-whole-message
-;  (test-message-extract-helper "txt:sep=pipe;ts_sec=3;msg=-1"
-;                               #(= % (* 315532800 1000))
-;                               TEST-MSG))
-;
-;
-;(deftest test-array-splice-parser
-;  (let [msg (into-array String ["ABC" "EFD"])]
-;
-;    (is
-;      (=
-;        ((formats/array-parser ":") msg)
-;        msg))
-;
-;    (is
-;      (=
-;        (seq ((formats/array-parser "0:") msg))
-;        (seq msg)))
-;
-;
-;    (is
-;      (=
-;        (seq ((formats/array-parser ":-1") msg))
-;        (seq msg)))
-;
-;    (is
-;      (=
-;        (seq ((formats/array-parser ":-1000") msg))
-;        (seq msg)))
-;
-;    (is
-;      (=
-;        (seq ((formats/array-parser ":100000") msg))
-;        (seq msg)))
-;
-;    (is
-;      (=
-;        (seq ((formats/array-parser "0:1") msg))
-;        (seq (into-array String ["ABC"]))))
-;
-;    (is
-;      (=
-;        (seq ((formats/array-parser "0") msg))
-;        (seq (into-array String ["ABC"]))))
-;
-;    (is
-;      (=
-;        (seq ((formats/array-parser "1") msg))
-;        (seq (into-array String ["EFD"]))))
-;    ))
+
+(deftest test-extract-time-from-txt
+  (test-message-extract-helper "txt:sep=pipe;ts_sec=3;msg=1"
+                               #(= % (* 315532800 1000))
+                               (into-array ["aasdfghjkl"])))
+
+(deftest test-use-current-time-always-from-txt
+  (test-message-extract-helper "txt:sep=pipe;ts_sec=-1;msg=1"
+                               #(< (- % (System/currentTimeMillis)) 10000) ;;check that the time is within 10 seconds,
+                               ;; the time will never reliably be exrtact current mills as seen in the format method and in this test because the happen at different times
+                               (into-array ["aasdfghjkl"])))
+
+
+(deftest test-array-splice-parser
+  (let [msg (into-array String ["ABC" "EFD"])]
+
+    (is
+      (=
+        ((formats/array-parser ":") msg)
+        msg))
+
+    (is
+      (=
+        (seq ((formats/array-parser "0:") msg))
+        (seq msg)))
+
+
+    (is
+      (=
+        (seq ((formats/array-parser ":-1") msg))
+        (seq msg)))
+
+    (is
+      (=
+        (seq ((formats/array-parser ":-1000") msg))
+        (seq msg)))
+
+    (is
+      (=
+        (seq ((formats/array-parser ":100000") msg))
+        (seq msg)))
+
+    (is
+      (=
+        (seq ((formats/array-parser "0:1") msg))
+        (seq (into-array String ["ABC"]))))
+
+    (is
+      (=
+        (seq ((formats/array-parser "0") msg))
+        (seq (into-array String ["ABC"]))))
+
+    (is
+      (=
+        (seq ((formats/array-parser "1") msg))
+        (seq (into-array String ["EFD"]))))))
