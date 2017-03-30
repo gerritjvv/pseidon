@@ -8,6 +8,7 @@ import pseidon.plugin.Plugin;
 
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.util.Arrays;
 
 /**
  * Utility functions
@@ -19,6 +20,10 @@ public class Util {
      */
     public static final Plugin asPlugin(IFn fn){
         return new IFnPlugin(fn);
+    }
+
+    public static final <T> long arraySize(T[] a){
+        return a.length;
     }
 
     public static final byte[] readFile(String file) throws IOException {

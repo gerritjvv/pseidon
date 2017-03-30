@@ -38,8 +38,66 @@
             [clj-time.coerce :as c])
   (:import (java.util Map Date Arrays)
            (org.apache.commons.lang3 StringUtils)
-           (pseidon_etl FormatMsgImpl)
+           (pseidon_etl FormatMsgImpl Util)
            (org.apache.avro.generic IndexedRecord)))
+
+
+;;;; indexed protocol to add support for IndexedRecord
+(defprotocol IIndexed
+  (-nth [v i]))
+
+(extend-protocol
+
+  IIndexed
+
+  IndexedRecord
+  (-nth [r i] (.get ^IndexedRecord r (int i)))
+
+  Object
+  (-nth [r i] (nth r i)))
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;; string array python style splice support
+
+;;a[start:end] # items start through end-1
+;;a[start:]    # items start through the rest of the array
+;;a[:end]      # items from the beginning through end-1
+;;a[:]         # a copy of the whole array
+
+
+(defn  to-int [ s] (Integer/parseInt s))
+
+(defn splice-parser
+  ([splice]
+   (let [emtpy? (fn [s] (or (not s) (= (clojure.string/trim s) "")))
+
+         [start end] (clojure.string/split splice #":")
+
+         start-i (if (emtpy? start) 0 (Math/max (int 0) (int (to-int start))))
+         end-i   (if (emtpy? end) -1  (Math/max (int -1) (int (to-int end))))
+         ]
+
+     (cond
+       (and (= end-i -1) (zero? start-i))
+       (fn [^"[Ljava.lang.String;" arr]
+         arr)
+
+       :else
+       (fn [^"[Ljava.lang.String;" arr]
+         (let [cnt (Util/arraySize arr)]
+           (Arrays/copyOfRange arr (int start-i) (if (or (> (int end-i) (int cnt)) (= end-i -1))
+                                                   (int cnt)
+                                                   (int end-i)))))))))
+(defn array-parser
+  "Except python splice syntax (wihtout the brackets) or normal indices 0-(len-1)
+   and always return a String array"
+  [s]
+  (if (StringUtils/isNumeric (str s))
+    (let [i (to-int s)]
+      (fn [^"[Ljava.lang.String;" arr]
+        (Arrays/copyOfRange arr (int i) (inc (int i)))))
+    (splice-parser s)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;; Data Types and multimethods
@@ -69,21 +127,6 @@
 (defonce BYTE1 \u0001)
 (defonce TAB \tab)
 (defonce SPACE \space)
-
-
-;;;; indexed protocol to add support for IndexedRecord
-(defprotocol IIndexed
-  (-nth [v i]))
-
-(extend-protocol
-
-  IIndexed
-
-  IndexedRecord
-  (-nth [r i] (.get ^IndexedRecord r (int i)))
-
-  Object
-  (-nth [r i] (nth r i)))
 
 (defn cast-long [v]
   (if (instance? Number v)
@@ -183,10 +226,9 @@
 
 (defn txt-msg-parser
   [props]
-  (let [msg-index (cast-long (get props "msg" "-1"))]
-    (if (pos? msg-index)
-      (fn [_ msg] (-nth msg msg-index))
-      (fn [^"[B" bts msg] (String. bts "UTF-8")))))
+  (let [p (array-parser (str (get props "msg" "0:")))]
+    (fn [_ m]
+      (p m))))
 
 (defn default-format-descriptor [format]
   (assoc
@@ -219,11 +261,8 @@
     (->FormatMsg format ts bts msg)))
 
 (defmethod msg->string "txt" [_ _ format ^FormatMsgImpl msg]
-  (let [wrappedMsg (:msg msg)]
-    (if (instance? String wrappedMsg)
-      wrappedMsg
-      (StringUtils/join ^"[Ljava.lang.String;" (wrappedMsg) (char (split-type format))))))
+  (StringUtils/join ^"[Ljava.lang.String;" (:msg msg) (char (split-type format))))
 
 (defmethod msg->bts "txt" [_ _ format ^FormatMsgImpl msg]
-  ((:bts-parser format) format msg))
+  (.getBytes (StringUtils/join ^"[Ljava.lang.String;" (:msg msg) (char (split-type format))) "UTF-8"))
 
