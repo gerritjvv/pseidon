@@ -86,9 +86,11 @@
        :else
        (fn [^"[Ljava.lang.String;" arr]
          (let [cnt (Util/arraySize arr)]
-           (Arrays/copyOfRange arr (int start-i) (if (or (> (int end-i) (int cnt)) (= end-i -1))
-                                                   (int cnt)
-                                                   (int end-i)))))))))
+           (if (< (int start-i) (int cnt))
+             (Arrays/copyOfRange arr (int start-i) (if (or (> (int end-i) (int cnt)) (= end-i -1))
+                                                     (int cnt)
+                                                     (Math/max (int end-i) (int (inc start-i)))))
+             (into-array String []))))))))
 (defn array-parser
   "Except python splice syntax (wihtout the brackets) or normal indices 0-(len-1)
    and always return a String array"
@@ -195,8 +197,9 @@
 (defn parse-format
   "Return record{:props, :type}"
   [^String input]
-  (let [[type args] (string/split input #":")
-        props (vals-as-map (string/split args #"[=;]"))]
+  (let [[type & rest] (string/split input #":")
+              ;;; to support : syntax in the properties, we join any rest back into with :
+        props (vals-as-map (string/split (string/join ":" rest) #"[=;]"))]
 
     (->Format (str type) ^Map props)))
 
@@ -242,7 +245,8 @@
 
 (defmethod format-descriptor "txt" [_ _ format]
   (assoc
-    (default-format-descriptor format)
+    format
+    :ts-parser (ts-parser (:props format))
     :msg-parser (txt-msg-parser (:props format))))
 
 (defmethod dispose-format :default [_ _ _])

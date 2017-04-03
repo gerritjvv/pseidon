@@ -5,25 +5,25 @@
 
 (defonce ^String TEST-MSG "5|aasdfghjkl|adfgasdgsd|315532800|dsfsdfdsf")
 
-;(deftest test-parse-format
-;  (is (= (formats/parse-format "txt:ts=0;sep=byte1") (formats/->Format "txt" {"ts" 0 "sep" "byte1"}))))
-;
-;(deftest test-extract-message-from-txt
-;
-;  (let [topic "testtopic"
-;        conf {}
-;        ts  (System/currentTimeMillis)
-;        input-str (str ts \u0001 "hi")
-;        bts (.getBytes input-str)
-;        f   (formats/format-descriptor (atom {}) {} (formats/parse-format "txt:ts=0;sep=byte1;msg=1"))
-;        msg (formats/bts->msg conf topic f bts)
-;
-;        msg-str (formats/msg->string conf topic f msg)]
-;
-;
-;    (is (= msg-str "hi"))))
-;
-;
+(deftest test-parse-format
+  (is (= (formats/parse-format "txt:ts=0;sep=byte1") (formats/->Format "txt" {"ts" 0 "sep" "byte1"}))))
+
+(deftest test-extract-message-from-txt
+
+  (let [topic "testtopic"
+        conf {}
+        ts  (System/currentTimeMillis)
+        input-str (str ts \u0001 "hi")
+        bts (.getBytes input-str)
+        f   (formats/format-descriptor (atom {}) {} (formats/parse-format "txt:ts=0;sep=byte1;msg=1"))
+        msg (formats/bts->msg conf topic f bts)
+
+        msg-str (formats/msg->string conf topic f msg)]
+
+
+    (is (= msg-str "hi"))))
+
+
 (defn test-message-extract-helper [format-str expected-ts? expected-msg]
   (let [topic "test"
         msg TEST-MSG
@@ -32,6 +32,7 @@
         format-msg (formats/bts->msg {} topic f bts)]
 
     (is (expected-ts? (:ts format-msg)))
+
     (is (= (seq (:msg format-msg)) (seq expected-msg)))
 
     (is (StringUtils/join (:msg format-msg) \|)
@@ -52,6 +53,22 @@
                                #(< (- % (System/currentTimeMillis)) 10000) ;;check that the time is within 10 seconds,
                                ;; the time will never reliably be exrtact current mills as seen in the format method and in this test because the happen at different times
                                (into-array ["aasdfghjkl"])))
+
+
+(deftest test-array-splice-with-format-same-index-neg-msg
+  (test-message-extract-helper "txt:sep=pipe;ts_sec=-1;msg=-1:-1" (constantly true) ["5" "aasdfghjkl" "adfgasdgsd", "315532800" "dsfsdfdsf"])
+  (test-message-extract-helper "txt:sep=pipe;ts_sec=-1;msg=-1:-10" (constantly true) ["5" "aasdfghjkl" "adfgasdgsd", "315532800" "dsfsdfdsf"])
+  (test-message-extract-helper "txt:sep=pipe;ts_sec=-1;msg=-100:-10" (constantly true) ["5" "aasdfghjkl" "adfgasdgsd", "315532800" "dsfsdfdsf"])
+  (test-message-extract-helper "txt:sep=pipe;ts_sec=-1;msg=-1:" (constantly true) ["5" "aasdfghjkl" "adfgasdgsd", "315532800" "dsfsdfdsf"])
+  (test-message-extract-helper "txt:sep=pipe;ts_sec=-1;msg=:-1" (constantly true) ["5" "aasdfghjkl" "adfgasdgsd", "315532800" "dsfsdfdsf"])
+  (test-message-extract-helper "txt:sep=pipe;ts_sec=-1;msg=2:-1" (constantly true) ["adfgasdgsd", "315532800" "dsfsdfdsf"])
+  (test-message-extract-helper "txt:sep=pipe;ts_sec=-1;msg=2:4" (constantly true) ["adfgasdgsd" "315532800"])
+  (test-message-extract-helper "txt:sep=pipe;ts_sec=-1;msg=2:3" (constantly true) ["adfgasdgsd"])
+  (test-message-extract-helper "txt:sep=pipe;ts_sec=-1;msg=2:2" (constantly true) ["adfgasdgsd"])
+  (test-message-extract-helper "txt:sep=pipe;ts_sec=-1;msg=2:1" (constantly true) ["adfgasdgsd"])
+  (test-message-extract-helper "txt:sep=pipe;ts_sec=-1;msg=2:1000" (constantly true) ["adfgasdgsd" "315532800" "dsfsdfdsf"])
+  (test-message-extract-helper "txt:sep=pipe;ts_sec=-1;msg=10000:1000" (constantly true) []))
+
 
 
 (deftest test-array-splice-parser
@@ -97,3 +114,4 @@
       (=
         (seq ((formats/array-parser "1") msg))
         (seq (into-array String ["EFD"]))))))
+
