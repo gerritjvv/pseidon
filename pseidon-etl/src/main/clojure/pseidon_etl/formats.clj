@@ -72,7 +72,7 @@
   ([splice]
    (let [emtpy? (fn [s] (or (not s) (= (clojure.string/trim s) "")))
 
-         [start end] (clojure.string/split splice #":")
+         [start end] (mapv string/trim (clojure.string/split splice #":"))
 
          start-i (if (emtpy? start) 0 (Math/max (int 0) (int (to-int start))))
          end-i   (if (emtpy? end) -1  (Math/max (int -1) (int (to-int end))))
